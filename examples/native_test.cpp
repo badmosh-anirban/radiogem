@@ -44,9 +44,12 @@ int main(int argc, char** argv) {
     printf(" Radio: 866.5 MHz | 125 kHz | SF7 | CR 4/5 | 10 dBm\n");
     printf("=========================================\n");
 
+    bool isHwCs = (spiChannel == 1 && nssPin == 7) || (spiChannel == 0 && nssPin == 8);
+    uint32_t modNss = isHwCs ? RADIOLIB_NC : nssPin;
+
     PiHal* hal = new PiHal(spiChannel);
-    Module* mod = new Module(hal, nssPin, dio1Pin, rstPin, busyPin);
-    SX1262 radio = new Module(hal, nssPin, dio1Pin, rstPin, busyPin);
+    Module* mod = new Module(hal, modNss, dio1Pin, rstPin, busyPin);
+    SX1262 radio(mod);
 
     printf("[SX1262] Initializing ... ");
     fflush(stdout);

@@ -1,0 +1,362 @@
+============================================================
+ pyradiolib + gpiozero Coexistence Demo
+============================================================
+[gpiozero] Attached Status LED to GPIO21 and Button to GPIO20
+[pyradiolib] Initializing SX1262 on SPI1, NSS=7, DIO1=17, RST=22, BUSY=24...
+Could not claim pin 7 for mode 1: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+[pyradiolib] Radio initialized successfully!
+
+Demonstrating non-conflicting concurrent operation:
+- Blinking gpiozero LED while transmitting via pyradiolib...
+  -> Transmitting 'Coexistence packet #0' (LED ON)... Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+TX OK
+  -> Transmitting 'Coexistence packet #1' (LED ON)... Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+TX OK
+  -> Transmitting 'Coexistence packet #2' (LED ON)... Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+TX OK
+  -> Transmitting 'Coexistence packet #3' (LED ON)... Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+TX OK
+  -> Transmitting 'Coexistence packet #4' (LED ON)... Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+Error writing value to pin 7: GPIO busy
+TX OK
+
+SUCCESS: Both pyradiolib (PiHal) and gpiozero operated harmoniously!
+
+
+---
+receiver side
+
+-----------------------
+Received: Coexistence packet #0
+  RSSI: -61.00 dBm
+  SNR: 13.25 dB
+-----------------------
+Received: Coexistence packet #1
+  RSSI: -65.00 dBm
+  SNR: 12.25 dB
+-----------------------
+Received: Coexistence packet #2
+  RSSI: -63.00 dBm
+  SNR: 12.25 dB
+-----------------------
+Received: Coexistence packet #3
+  RSSI: -63.00 dBm
+  SNR: 12.25 dB
+-----------------------
+Received: Coexistence packet #4
+  RSSI: -63.00 dBm
+  SNR: 12.50 dB
+-----------------------

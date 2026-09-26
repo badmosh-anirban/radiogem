@@ -39,6 +39,22 @@ class PiHal : public RadioLibHal {
       term();
     }
 
+    /**
+     * @brief Checks if a pin is a hardware SPI Chip Enable pin owned by the kernel SPI driver.
+     * When spidev manages the pin, userspace GPIO manipulation fails with EBUSY.
+     */
+    bool isSpiHardwareCs(uint32_t pin) const {
+      if(_spiDevice == 0) {
+        if(_spiChannel == 0 && pin == 8) return true; // SPI0 CE0
+        if(_spiChannel == 1 && pin == 7) return true; // SPI0 CE1
+      } else if(_spiDevice == 1) {
+        if(_spiChannel == 0 && pin == 18) return true; // SPI1 CE0
+        if(_spiChannel == 1 && pin == 17) return true; // SPI1 CE1
+        if(_spiChannel == 2 && pin == 16) return true; // SPI1 CE2
+      }
+      return false;
+    }
+
     void init() override {
       if(_gpioHandle != -1) {
         return;
@@ -73,9 +89,9 @@ class PiHal : public RadioLibHal {
     }
 
     // GPIO-related methods (pinMode, digitalWrite etc.) should check
-    // RADIOLIB_NC as an alias for non-connected pins
+    // RADIOLIB_NC or hardware SPI CS pins
     void pinMode(uint32_t pin, uint32_t mode) override {
-      if(pin == RADIOLIB_NC) {
+      if(pin == RADIOLIB_NC || isSpiHardwareCs(pin)) {
         return;
       }
 
@@ -99,7 +115,7 @@ class PiHal : public RadioLibHal {
     }
 
     void digitalWrite(uint32_t pin, uint32_t value) override {
-      if(pin == RADIOLIB_NC) {
+      if(pin == RADIOLIB_NC || isSpiHardwareCs(pin)) {
         return;
       }
 

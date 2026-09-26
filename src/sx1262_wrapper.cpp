@@ -18,8 +18,24 @@ SX1262Wrapper::SX1262Wrapper(
     uint32_t rst_pin  = (reset < 0) ? RADIOLIB_NC : static_cast<uint32_t>(reset);
     uint32_t busy_pin = (busy < 0)  ? RADIOLIB_NC : static_cast<uint32_t>(busy);
 
+    // If NSS matches the hardware SPI Chip Enable pin for the given SPI bus,
+    // the Linux kernel SPI driver (spidev) asserts and deasserts the pin automatically
+    // during lgSpiXfer(). Passing RADIOLIB_NC to Module tells RadioLib not to
+    // redundantly attempt manual software GPIO writes to a kernel-claimed pin.
+    bool is_hw_cs = false;
+    if (spi_device == 0) {
+        if ((spi_channel == 0 && nss_pin == 8) || (spi_channel == 1 && nss_pin == 7)) {
+            is_hw_cs = true;
+        }
+    } else if (spi_device == 1) {
+        if ((spi_channel == 0 && nss_pin == 18) || (spi_channel == 1 && nss_pin == 17) || (spi_channel == 2 && nss_pin == 16)) {
+            is_hw_cs = true;
+        }
+    }
+    uint32_t mod_nss = is_hw_cs ? RADIOLIB_NC : nss_pin;
+
     hal = new PiHal(spi_channel, spi_speed, spi_device, gpio_device);
-    mod = new Module(hal, nss_pin, dio1_pin, rst_pin, busy_pin);
+    mod = new Module(hal, mod_nss, dio1_pin, rst_pin, busy_pin);
     radio = new SX1262(mod);
 }
 
