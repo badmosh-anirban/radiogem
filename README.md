@@ -1,0 +1,438 @@
+# pyradiolib
+
+Python bindings for the **RadioLib C++ library** targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
+
+---
+
+## 1. Architecture
+
+```text
+Python Application (your script or daemon)
+        │
+        ▼
+    pyradiolib  (Python module)
+        │
+  pybind11 layer  (bindings.cpp)
+        │
+        ▼
+  SX1262Wrapper  (C++ wrapper)
+        │
+        ▼
+  RadioLib C++ (SX1262 / Module)
+        │
+        ▼
+   PiHal (RPi HAL)
+        │
+        ▼
+      lgpio
+        │
+   ┌────┴────────┐
+   ▼             ▼
+Linux SPI    Linux GPIO
+   │             │
+   └─────┬───────┘
+         ▼
+    SX1262 LoRa
+```
+
+Key principles:
+- **No Python rewrite** of radio protocols or register logic — wraps tested RadioLib C++ directly.
+- **Hardware abstraction** through RadioLib's official `PiHal.h` using `lgpio`.
+- **GIL released** during transmission and packet reception so Python asyncio, threads, and UI don't block.
+- **`gpiozero` coexistence**: SX1262 pins are owned by `PiHal`, leaving other GPIO pins completely free for `gpiozero` without driver conflict.
+
+---
+
+## 2. Hardware Wiring (Defaults)
+
+| Pin Function | SX1262 Pin | Raspberry Pi Pin (BCM) | Description |
+| :--- | :--- | :--- | :--- |
+| **MOSI** | MOSI | GPIO 10 (SPI0 MOSI) | SPI Data to Radio |
+| **MISO** | MISO | GPIO 9 (SPI0 MISO) | SPI Data from Radio |
+| **SCK** | SCK | GPIO 11 (SPI0 SCLK) | SPI Clock |
+| **NSS / CS** | NSS | GPIO 7 (CE1) or GPIO 8 (CE0) | Chip Select (Default: 7) |
+| **DIO1** | DIO1 | GPIO 17 | Interrupt / Packet Ready |
+| **RESET** | NRST | GPIO 22 | Hardware Reset |
+| **BUSY** | BUSY | GPIO 24 | Radio Busy Line |
+| **Power** | 3.3V | 3.3V Pin | Power supply |
+| **Ground** | GND | GND Pin | Ground |
+
+*All pin assignments are completely configurable when creating the `SX1262` object.*
+
+---
+
+## 3. Raspberry Pi Prerequisites
+
+### Step 1: Enable SPI
+Open the Raspberry Pi configuration tool:
+```bash
+sudo raspi-config
+```
+Navigate to **Interface Options** -> **SPI** -> **Yes** to enable SPI, then finish.
+
+### Step 2: Install Build Dependencies
+```bash
+sudo apt update
+sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
+```
+
+---
+
+## 4. Build Instructions
+
+### Option A: Build via CMake (Recommended for Native + Python)
+
+```bash
+cd radiogem
+
+# Create build directory
+mkdir -p build && cd build
+
+# Configure and compile
+cmake ..
+make -j4
+```
+
+This builds two targets:
+1. `native_test` — Standalone C++ verification binary.
+2. `pyradiolib.so` — Python extension module.
+
+#### Test Native C++ First (Stage 1 Verification)
+Before using Python, verify your SPI wiring and module connection natively:
+```bash
+# In build/ directory:
+./native_test --tx
+```
+Or for receiver mode:
+```bash
+./native_test --rx
+```
+
+---
+
+### Option B: Install via pip
+
+To install `pyradiolib` directly into your Python environment or virtual environment:
+
+```bash
+cd radiogem
+
+# Install directly
+pip install .
+
+# Or for editable/development mode
+pip install -e .
+```
+
+---
+
+## 5. Python Quick Start
+
+### Basic Transmitter (TX)
+
+```python
+from pyradiolib import SX1262, ERR_NONE
+
+# 1. Initialize radio with pin mapping
+radio = SX1262(
+    spi_channel=1,      # SPI CE1
+    spi_speed=2000000,  # 2 MHz
+    nss=7,              # NSS pin
+    dio1=17,            # DIO1 pin
+    reset=22,           # RESET pin
+    busy=24             # BUSY pin
+)
+
+# 2. Begin LoRa operation
+status = radio.begin(
+    frequency=866.5,    # MHz
+    bandwidth=125.0,    # kHz
+    spreading_factor=7, # SF7
+    coding_rate=5,      # 4/5
+    power=10            # 10 dBm
+)
+
+if status != ERR_NONE:
+    print(f"Init error: {radio.get_status_text()}")
+    exit(1)
+
+# 3. Transmit packet (accepts string or bytes)
+status = radio.transmit("Hello from Raspberry Pi LoRa!")
+if status == ERR_NONE:
+    print("Transmitted successfully!")
+```
+
+### Basic Receiver (RX)
+
+```python
+from pyradiolib import SX1262, ERR_NONE
+
+radio = SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24)
+radio.begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, power=10)
+
+print("Listening for packets...")
+while True:
+    # Wait up to 5 seconds for a packet (releases GIL while waiting)
+    packet = radio.receive(timeout_ms=5000)
+
+    if packet:
+        print(f"Received {len(packet)} bytes:")
+        print(f"  Payload: {packet.text}")
+        print(f"  RSSI:    {packet.rssi:.1f} dBm")
+        print(f"  SNR:     {packet.snr:.1f} dB")
+```
+
+### Context Manager Usage
+
+```python
+with SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24) as radio:
+    radio.begin(frequency=866.5)
+    radio.transmit("Self-closing radio session")
+# Radio, SPI, and GPIO handles are automatically released here
+```
+
+---
+
+## 6. Examples
+
+The `examples/` directory contains complete runnable examples:
+
+| Script | Purpose |
+| :--- | :--- |
+| [`examples/native_test.cpp`](examples/native_test.cpp) | Native C++ hardware verification executable |
+| [`examples/basic_tx.py`](examples/basic_tx.py) | Python continuous LoRa transmitter |
+| [`examples/basic_rx.py`](examples/basic_rx.py) | Python continuous LoRa receiver |
+| [`examples/basic_tx_rx.py`](examples/basic_tx_rx.py) | Interactive CLI tool with configurable RF parameters |
+| [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals |
+
+### Running the examples:
+
+From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`):
+```bash
+# If running directly after building in build/:
+export PYTHONPATH=$PYTHONPATH:$(pwd)/build
+
+# Run TX:
+python3 examples/basic_tx.py
+
+# Run RX:
+python3 examples/basic_rx.py
+
+# Run with gpiozero:
+python3 examples/gpiozero_coexist.py
+```
+
+---
+
+## 7. Python API Reference
+
+### `SX1262` Class
+
+#### Constructor:
+```python
+SX1262(
+    spi_channel: int = 1,
+    spi_speed: int = 2000000,
+    spi_device: int = 0,
+    gpio_device: int = 0,
+    nss: int = 7,
+    dio1: int = 17,
+    reset: int = 22,
+    busy: int = 24
+)
+```
+
+#### Methods:
+- `begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, sync_word=0x12, power=10, preamble_length=8, tcxo_voltage=1.6, use_regulator_ldo=False) -> int`: Initializes LoRa modem. Returns `0` on success.
+- `transmit(data: Union[str, bytes]) -> int`: Transmits packet. Releases GIL. Returns `0` on success.
+- `receive(timeout_ms: int = 0, return_none_on_error: bool = True) -> Optional[Packet]`: Receives packet. Releases GIL.
+- `standby(mode: int = 1) -> int`: Enters standby mode (`1` = STDBY_RC, `2` = STDBY_XOSC).
+- `sleep(retain_config: bool = False) -> int`: Enters low power sleep mode.
+- `set_frequency(freq: float) -> int`: Sets carrier frequency in MHz.
+- `set_bandwidth(bw: float) -> int`: Sets bandwidth in kHz.
+- `set_spreading_factor(sf: int) -> int`: Sets spreading factor (5 to 12).
+- `set_coding_rate(cr: int) -> int`: Sets coding rate denominator (5 to 8).
+- `set_output_power(power: int) -> int`: Sets transmission power in dBm (-9 to +22).
+- `get_rssi() -> float` / `radio.rssi`: RSSI of the last received packet.
+- `get_snr() -> float` / `radio.snr`: SNR of the last received packet.
+- `get_status_text() -> str`: Human-readable error description for `last_status`.
+- `close() -> None`: Releases SPI and GPIO resources.
+
+### `Packet` Class
+
+Returned by `radio.receive()`:
+- `packet.payload` / `packet.data`: Raw bytes of payload.
+- `packet.text`: Payload decoded as UTF-8 string.
+- `packet.rssi`: Signal strength in dBm.
+- `packet.snr`: Signal to noise ratio in dB.
+- `packet.status`: Integer status code (`0` = success).
+- `len(packet)`: Payload length in bytes.
+- `bool(packet)`: Evaluates to `True` if `status == 0`.
+
+---
+
+## 8. Common Error Codes & Troubleshooting
+
+| Code | Name | Cause & Solution |
+| :--- | :--- | :--- |
+| `0` | `ERR_NONE` | Operation succeeded. |
+| `-2` | `ERR_CHIP_NOT_FOUND` | Radio chip not responding over SPI. Verify SPI is enabled (`raspi-config`), check NSS/CE pin connection, SPI channel (0 vs 1), and 3.3V power. |
+| `-5` | `ERR_TX_TIMEOUT` | Transmission timed out. Check DIO1 and BUSY pin wiring. |
+| `-6` | `ERR_RX_TIMEOUT` | No packet received within timeout period. |
+| `-7` | `ERR_CRC_MISMATCH` | Packet corrupted during transmission. Check antennas and frequency/SF alignment. |
+| `-706` | `ERR_SPI_CMD_TIMEOUT` | SX1262 command timed out. If your board uses a crystal (XTAL) rather than TCXO, set `tcxo_voltage=0.0`. |
+| `-707` | `ERR_SPI_CMD_INVALID` | Invalid SX1262 command. Check TCXO voltage or chip revision. |
+
+---
+# Other
+
+### Project Architecture & Layout
+
+```
+
+├── CMakeLists.txt              # Unified build system (native C++ & Python module)
+├── setup.py                    # pip install . support with CMakeExtension
+├── pyproject.toml              # Modern Python packaging configuration
+├── README.md                   # Full documentation, wiring guide, and API reference
+├── .gitignore                  # Clean ignore list for build artifacts & caches
+│
+├── hal/
+│   └── PiHal.h                 # Official RadioLib lgpio HAL with safe destructor
+│
+├── src/
+│   ├── sx1262_wrapper.h        # C++ wrapper header & Packet definition
+│   ├── sx1262_wrapper.cpp      # C++ wrapper implementation (RadioLib + PiHal)
+│   └── bindings.cpp            # pybind11 module bindings with GIL release
+│
+├── examples/
+│   ├── native_test.cpp         # Stage 1: Standalone C++ hardware verification
+│   ├── basic_tx.py             # Stage 4: Python continuous transmitter
+│   ├── basic_rx.py             # Stage 5: Python continuous receiver
+│   ├── basic_tx_rx.py          # Interactive bidirectional CLI utility
+│   └── gpiozero_coexist.py     # Stage 6: gpiozero coexistence demo
+│
+└── RadioLib/                   # RadioLib C++ submodule
+```
+
+---
+
+### Key Highlights of the Implementation
+
+1. **Direct C++ Binding (No Protocol Reimplementation)**:
+
+   - Uses the existing, tested [`RadioLib`](RadioLib) C++ library and [`hal/PiHal.h`](hal/PiHal.h) (`lgpio`).
+   - Radio registers, LoRa packet framing, and interrupt handling remain in native C++.
+
+2. **Pythonic API (`pyradiolib`)**:
+
+   - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=17, reset=22, busy=24`).
+   - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm**.
+   - `transmit()` seamlessly accepts both Python `str` and binary `bytes`.
+   - `receive(timeout_ms=5000)` returns a `Packet` object (`packet.payload`, `packet.text`, `packet.rssi`, `packet.snr`) or `None` on timeout.
+   - Supports Python context managers: `with SX1262(...) as radio:`.
+
+3. **GIL Release & `gpiozero` Coexistence**:
+
+   - `transmit()` and `receive()` release the Python GIL (`py::call_guard<py::gil_scoped_release>()`) during radio operations so background threads, asyncio, and `gpiozero` event handlers run without blocking.
+   - SX1262 pins are owned by `PiHal` while other pins remain free for `gpiozero` (demonstrated in [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py)).
+
+4. **Multi-Stage Verification Support**:
+   - Includes [`examples/native_test.cpp`](examples/native_test.cpp) to verify native C++ SPI communication on the Pi before testing Python.
+
+---
+
+### How to Build & Test on Raspberry Pi
+
+#### 1. Install prerequisites on your Raspberry Pi:
+
+```bash
+sudo apt update
+sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
+```
+
+#### 2. Build via CMake (Builds both native test & Python module):
+
+```bash
+cd radiogem
+mkdir -p build && cd build
+cmake ..
+make -j4
+```
+
+#### 3. Stage 1 — Verify Native C++ first:
+
+```bash
+# In the build/ directory:
+./native_test --tx    # Run transmitter
+# or
+./native_test --rx    # Run receiver
+```
+
+#### 4. Run Python Examples:
+
+```bash
+# From repository root with PYTHONPATH pointing to build/:
+export PYTHONPATH=$PYTHONPATH:$(pwd)/build
+
+# Test transmitter:
+python3 examples/basic_tx.py
+
+# Test receiver:
+python3 examples/basic_rx.py
+
+# Test gpiozero coexistence:
+python3 examples/gpiozero_coexist.py
+```
+
+_(You can also install system/venv-wide with `pip install .`)_
+
+---
+---
+---
+In Python, [`setup.py`](setup.py) is the **build, packaging, and installation configuration script**.
+
+In this specific project, [`setup.py`](setup.py) bridges **Python's package manager (`pip`)** with **C++ CMake compilation**.
+
+---
+
+### What it does in this project:
+
+#### 1. Enables `pip install .`
+Because `pyradiolib` is written in C++ (wrapping RadioLib and `lgpio`), Python cannot run it as plain `.py` text files. It must be compiled into a binary shared object library (`pyradiolib.so`).
+
+[`setup.py`](setup.py) allows you (or anyone using your project on a Raspberry Pi) to simply run:
+```bash
+pip install .
+```
+Under the hood, `setup.py` automatically:
+1. Calls `cmake` to configure the C++ project.
+2. Compiles `RadioLib`, `PiHal.h`, `sx1262_wrapper.cpp`, and `bindings.cpp`.
+3. Links against `lgpio`.
+4. Installs the resulting `pyradiolib` module directly into your Python environment (`.venv` or system Python).
+
+---
+
+#### 2. Allows importing from anywhere
+Without [`setup.py`](setup.py), after building with CMake, the `.so` file would only live in your `build/` folder, meaning you would have to either:
+- Keep all your Python scripts inside `build/`, or
+- Constantly set `export PYTHONPATH=...`
+
+With `pip install .` (via [`setup.py`](setup.py)), `pyradiolib` is installed into Python's `site-packages`, so any script anywhere on the Raspberry Pi can simply run:
+```python
+from pyradiolib import SX1262
+```
+
+---
+
+#### 3. Defines metadata and dependencies
+At the bottom of [`setup.py`](setup.py#L40-L52), it defines:
+- **Package Name**: `pyradiolib`
+- **Version**: `0.1.0`
+- **Target extension**: `pyradiolib` compiled via the custom `CMakeBuild` class.
+
+---
+
+### Summary
+- If you prefer manually running `cmake .. && make`, you can do that and use the `.so` directly.
+- [`setup.py`](setup.py) exists so you can install it standardly like any other Python library using **`pip install .`** (or **`pip install -e .`** for development mode).
+

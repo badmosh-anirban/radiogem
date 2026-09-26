@@ -1,0 +1,26 @@
+.DS_Store
+.pio/
+.vscode/
+
+# Build directories and binaries
+build/
+*.so
+*.dylib
+*.a
+*.o
+native_test
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+.eggs/
+.venv/
+env/
+venv/
+
+# personal
+gemini*
+# instruction*

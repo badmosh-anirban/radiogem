@@ -1,0 +1,144 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include "sx1262_wrapper.h"
+
+namespace py = pybind11;
+
+PYBIND11_MODULE(pyradiolib, m) {
+    m.doc() = "Python bindings for RadioLib SX1262 on Raspberry Pi";
+
+    // RadioLib Status Codes
+    m.attr("ERR_NONE")                      = 0;
+    m.attr("ERR_UNKNOWN")                   = -1;
+    m.attr("ERR_CHIP_NOT_FOUND")            = -2;
+    m.attr("ERR_MEMORY_ALLOCATION_FAILED")  = -3;
+    m.attr("ERR_PACKET_TOO_LONG")           = -4;
+    m.attr("ERR_TX_TIMEOUT")                = -5;
+    m.attr("ERR_RX_TIMEOUT")                = -6;
+    m.attr("ERR_CRC_MISMATCH")              = -7;
+    m.attr("ERR_INVALID_BANDWIDTH")         = -8;
+    m.attr("ERR_INVALID_SPREADING_FACTOR")  = -9;
+    m.attr("ERR_INVALID_CODING_RATE")       = -10;
+    m.attr("ERR_INVALID_OUTPUT_POWER")      = -13;
+    m.attr("ERR_SPI_CMD_TIMEOUT")           = -706;
+    m.attr("ERR_SPI_CMD_INVALID")           = -707;
+    m.attr("ERR_SPI_CMD_FAILED")            = -708;
+
+    m.def("get_status_text", &SX1262Wrapper::get_status_text,
+          py::arg("status"),
+          "Convert a RadioLib integer status code to human-readable text");
+
+    // Packet class
+    py::class_<Packet>(m, "Packet", "A received LoRa packet containing payload and signal metrics")
+        .def_property_readonly("payload", [](const Packet& p) {
+            return py::bytes(reinterpret_cast<const char*>(p.data.data()), p.data.size());
+        }, "Raw payload as bytes")
+        .def_property_readonly("data", [](const Packet& p) {
+            return py::bytes(reinterpret_cast<const char*>(p.data.data()), p.data.size());
+        }, "Alias for payload as bytes")
+        .def_property_readonly("text", &Packet::text, "Payload decoded as a UTF-8 string")
+        .def_readonly("rssi", &Packet::rssi, "Received Signal Strength Indicator (RSSI) in dBm")
+        .def_readonly("snr", &Packet::snr, "Signal-to-Noise Ratio (SNR) in dB")
+        .def_readonly("status", &Packet::status, "Status code (0 = success)")
+        .def("__len__", &Packet::size)
+        .def("__bool__", &Packet::is_valid)
+        .def("__bytes__", [](const Packet& p) {
+            return py::bytes(reinterpret_cast<const char*>(p.data.data()), p.data.size());
+        })
+        .def("__str__", &Packet::text)
+        .def("__repr__", [](const Packet& p) {
+            if (p.is_valid()) {
+                std::string s(p.data.begin(), p.data.end());
+                return "<Packet len=" + std::to_string(p.data.size()) +
+                       " payload=\"" + s + "\" rssi=" + std::to_string(p.rssi) +
+                       "dBm snr=" + std::to_string(p.snr) + "dB>";
+            } else {
+                return "<Packet status=" + std::to_string(p.status) + " (" +
+                       SX1262Wrapper::get_status_text(p.status) + ")>";
+            }
+        });
+
+    // SX1262 Radio Class
+    py::class_<SX1262Wrapper>(m, "SX1262", "RadioLib SX1262 driver for Raspberry Pi")
+        .def(py::init<uint8_t, uint32_t, uint8_t, uint8_t, int32_t, int32_t, int32_t, int32_t>(),
+            py::arg("spi_channel") = 1,
+            py::arg("spi_speed") = 2000000,
+            py::arg("spi_device") = 0,
+            py::arg("gpio_device") = 0,
+            py::arg("nss") = 7,
+            py::arg("dio1") = 17,
+            py::arg("reset") = 22,
+            py::arg("busy") = 24,
+            "Instantiate SX1262 radio with SPI and GPIO pin assignments")
+        .def("begin", &SX1262Wrapper::begin,
+            py::arg("frequency") = 866.5f,
+            py::arg("bandwidth") = 125.0f,
+            py::arg("spreading_factor") = 7,
+            py::arg("coding_rate") = 5,
+            py::arg("sync_word") = 0x12,
+            py::arg("power") = 10,
+            py::arg("preamble_length") = 8,
+            py::arg("tcxo_voltage") = 1.6f,
+            py::arg("use_regulator_ldo") = false,
+            "Initialize SX1262 modem for LoRa. Returns status code (0 = success)")
+        .def("transmit", [](SX1262Wrapper& self, const py::object& data) {
+            if (py::isinstance<py::bytes>(data)) {
+                std::string s = data.cast<std::string>();
+                return self.transmit_raw(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+            } else if (py::isinstance<py::str>(data)) {
+                std::string s = data.cast<std::string>();
+                return self.transmit(s);
+            } else {
+                throw py::type_error("transmit() data must be str or bytes");
+            }
+        }, py::call_guard<py::gil_scoped_release>(),
+           py::arg("data"),
+           "Transmit a packet (string or bytes). Releases GIL while transmitting. Returns status code (0 = success)")
+        .def("receive", &SX1262Wrapper::receive,
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("timeout_ms") = 0,
+            py::arg("return_none_on_error") = true,
+            "Receive a LoRa packet. Releases GIL while waiting. Returns Packet object or None on timeout/error")
+        .def("standby", &SX1262Wrapper::standby,
+            py::arg("mode") = 1,
+            "Enter standby mode (1 = STDBY_RC, 2 = STDBY_XOSC)")
+        .def("sleep", &SX1262Wrapper::sleep,
+            py::arg("retain_config") = false,
+            "Enter low-power sleep mode")
+        .def("set_frequency", &SX1262Wrapper::set_frequency,
+            py::arg("freq"),
+            "Change carrier frequency in MHz (e.g. 866.5)")
+        .def("set_bandwidth", &SX1262Wrapper::set_bandwidth,
+            py::arg("bw"),
+            "Change LoRa bandwidth in kHz (e.g. 125.0)")
+        .def("set_spreading_factor", &SX1262Wrapper::set_spreading_factor,
+            py::arg("sf"),
+            "Change LoRa spreading factor (5 - 12)")
+        .def("set_coding_rate", &SX1262Wrapper::set_coding_rate,
+            py::arg("cr"),
+            "Change LoRa coding rate denominator (5 - 8 for 4/5 - 4/8)")
+        .def("set_output_power", &SX1262Wrapper::set_output_power,
+            py::arg("power"),
+            "Change transmission output power in dBm (-9 to +22 dBm)")
+        .def("get_rssi", &SX1262Wrapper::get_rssi,
+            "Get RSSI of the last received packet in dBm")
+        .def("get_snr", &SX1262Wrapper::get_snr,
+            "Get SNR of the last received packet in dB")
+        .def_property_readonly("rssi", &SX1262Wrapper::get_rssi,
+            "RSSI of the last received packet in dBm")
+        .def_property_readonly("snr", &SX1262Wrapper::get_snr,
+            "SNR of the last received packet in dB")
+        .def_property_readonly("last_status", &SX1262Wrapper::get_last_status,
+            "Most recent RadioLib integer status code")
+        .def("get_status_text", [](SX1262Wrapper& self) {
+            return SX1262Wrapper::get_status_text(self.get_last_status());
+        }, "Human-readable description of the most recent status code")
+        .def("close", &SX1262Wrapper::close,
+            "Release GPIO, SPI, and radio hardware resources")
+        .def("__enter__", [](SX1262Wrapper& self) -> SX1262Wrapper& {
+            return self;
+        })
+        .def("__exit__", [](SX1262Wrapper& self, py::object, py::object, py::object) {
+            self.close();
+        });
+}

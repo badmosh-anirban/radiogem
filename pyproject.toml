@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyradiolib"
+version = "0.1.0"
+description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "RadioLib Community" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Communications :: Ham Radio"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "gpiozero"
+]
