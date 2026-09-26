@@ -13,7 +13,7 @@ def main():
                         help="Transmit interval in seconds (default: 1.0s; avoid 2.0s if receiver uses blocking 2.05s timeout)")
     parser.add_argument("--freq", type=float, default=866.5, help="Frequency in MHz (default: 866.5)")
     parser.add_argument("--power", type=int, default=10, help="TX power in dBm (default: 10)")
-    parser.add_argument("--tcxo", type=float, default=0.0, help="TCXO voltage (set 0.0 for XTAL crystals)")
+    parser.add_argument("--tcxo", type=float, default=1.6, help="TCXO voltage (set 0.0 for XTAL crystals)")
     args = parser.parse_args()
 
     print("=" * 45)

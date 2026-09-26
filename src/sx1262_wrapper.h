@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <functional>
+#include <atomic>
 
 // Forward declarations of RadioLib classes
 class PiHal;
@@ -71,22 +73,82 @@ public:
         bool use_regulator_ldo = false
     );
 
+    // ==========================================
+    // 1. Blocking Transmit & Receive
+    // ==========================================
+
     /**
-     * @brief Transmit string data.
+     * @brief Transmit string data (blocking until completion).
      */
     int16_t transmit(const std::string& data);
 
     /**
-     * @brief Transmit raw binary data.
+     * @brief Transmit raw binary data (blocking until completion).
      */
     int16_t transmit_raw(const uint8_t* data, size_t len);
 
     /**
-     * @brief Receive a LoRa packet.
+     * @brief Receive a LoRa packet (blocking with timeout).
      * @param timeout_ms Timeout in milliseconds. 0 = calculate default timeout based on time-on-air.
      * @param return_none_on_error If true, returns std::nullopt on timeout or error.
      */
     std::optional<Packet> receive(uint32_t timeout_ms = 0, bool return_none_on_error = true);
+
+    // ==========================================
+    // 2. Non-Blocking / Interrupt Transmit & Receive
+    // ==========================================
+
+    /**
+     * @brief Start non-blocking transmission of string data.
+     */
+    int16_t start_transmit(const std::string& data);
+
+    /**
+     * @brief Start non-blocking transmission of binary data.
+     */
+    int16_t start_transmit_raw(const uint8_t* data, size_t len);
+
+    /**
+     * @brief Finish non-blocking transmission (cleans up transmitter, standby mode).
+     */
+    int16_t finish_transmit();
+
+    /**
+     * @brief Start non-blocking listening for packets (continuous RX if timeout_ms=0).
+     */
+    int16_t start_receive(uint32_t timeout_ms = 0);
+
+    /**
+     * @brief Read data received by the radio after an interrupt.
+     */
+    std::optional<Packet> read_data(bool return_none_on_error = true);
+
+    /**
+     * @brief Set callback to be invoked when a complete packet is received.
+     */
+    void set_packet_received_action(std::function<void()> cb);
+    void clear_packet_received_action();
+
+    /**
+     * @brief Set callback to be invoked when packet transmission is finished.
+     */
+    void set_packet_sent_action(std::function<void()> cb);
+    void clear_packet_sent_action();
+
+    /**
+     * @brief Interrupt status flags for polling-based workflows.
+     */
+    bool has_received() const { return packet_received_flag.load(); }
+    bool has_sent() const { return packet_sent_flag.load(); }
+    void clear_flags() { packet_received_flag = false; packet_sent_flag = false; }
+
+    // Internal handlers called from C ISRs
+    void handlePacketReceived();
+    void handlePacketSent();
+
+    // ==========================================
+    // 3. Power & Mode Management
+    // ==========================================
 
     /**
      * @brief Put the radio in standby mode.
@@ -99,12 +161,21 @@ public:
      */
     int16_t sleep(bool retain_config = false);
 
-    // RF parameter adjustments
+    // ==========================================
+    // 4. Runtime RF & Modem Settings
+    // ==========================================
+
     int16_t set_frequency(float freq);
     int16_t set_bandwidth(float bw);
     int16_t set_spreading_factor(uint8_t sf);
     int16_t set_coding_rate(uint8_t cr);
     int16_t set_output_power(int8_t power);
+    int16_t set_sync_word(uint8_t sync_word, uint8_t control_bits = 0x44);
+    int16_t set_current_limit(float current_limit);
+    int16_t set_preamble_length(size_t preamble_length);
+    int16_t set_crc(bool enable);
+    int16_t set_tcxo(float voltage, uint32_t delay = 5000);
+    int16_t set_dio2_as_rf_switch(bool enable = true);
 
     // Signal quality queries
     float get_rssi();
@@ -123,6 +194,11 @@ private:
     SX1262* radio = nullptr;
     int16_t last_status = 0;
     bool is_initialized = false;
+
+    std::atomic<bool> packet_received_flag{false};
+    std::atomic<bool> packet_sent_flag{false};
+    std::function<void()> py_packet_received_cb = nullptr;
+    std::function<void()> py_packet_sent_cb = nullptr;
 };
 
 #endif // PYRADIOLIB_SX1262_WRAPPER_H

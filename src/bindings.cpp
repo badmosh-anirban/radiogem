@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/functional.h>
 #include "sx1262_wrapper.h"
 
 namespace py = pybind11;
@@ -20,6 +21,10 @@ PYBIND11_MODULE(pyradiolib, m) {
     m.attr("ERR_INVALID_SPREADING_FACTOR")  = -9;
     m.attr("ERR_INVALID_CODING_RATE")       = -10;
     m.attr("ERR_INVALID_OUTPUT_POWER")      = -13;
+    m.attr("ERR_INVALID_CRC_CONFIGURATION") = -14;
+    m.attr("ERR_INVALID_CURRENT_LIMIT")     = -17;
+    m.attr("ERR_INVALID_PREAMBLE_LENGTH")   = -18;
+    m.attr("ERR_INVALID_TCXO_VOLTAGE")      = -705;
     m.attr("ERR_SPI_CMD_TIMEOUT")           = -706;
     m.attr("ERR_SPI_CMD_INVALID")           = -707;
     m.attr("ERR_SPI_CMD_FAILED")            = -708;
@@ -81,6 +86,10 @@ PYBIND11_MODULE(pyradiolib, m) {
             py::arg("tcxo_voltage") = 1.6f,
             py::arg("use_regulator_ldo") = false,
             "Initialize SX1262 modem for LoRa. Returns status code (0 = success)")
+
+        // ---------------------------------------------------------------------
+        // 1. Blocking Transmit & Receive
+        // ---------------------------------------------------------------------
         .def("transmit", [](SX1262Wrapper& self, const py::object& data) {
             if (py::isinstance<py::bytes>(data)) {
                 std::string s = data.cast<std::string>();
@@ -93,24 +102,85 @@ PYBIND11_MODULE(pyradiolib, m) {
             }
         }, py::call_guard<py::gil_scoped_release>(),
            py::arg("data"),
-           "Transmit a packet (string or bytes). Releases GIL while transmitting. Returns status code (0 = success)")
+           "Transmit a packet (blocking). Releases GIL during transmission. Returns status code (0 = success)")
         .def("receive", &SX1262Wrapper::receive,
             py::call_guard<py::gil_scoped_release>(),
             py::arg("timeout_ms") = 0,
             py::arg("return_none_on_error") = true,
-            "Receive a LoRa packet. Releases GIL while waiting. Returns Packet object or None on timeout/error")
+            "Receive a LoRa packet (blocking with timeout). Releases GIL. Returns Packet or None")
+
+        // ---------------------------------------------------------------------
+        // 2. Non-Blocking / Interrupt Transmit & Receive
+        // ---------------------------------------------------------------------
+        .def("start_transmit", [](SX1262Wrapper& self, const py::object& data) {
+            if (py::isinstance<py::bytes>(data)) {
+                std::string s = data.cast<std::string>();
+                return self.start_transmit_raw(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+            } else if (py::isinstance<py::str>(data)) {
+                std::string s = data.cast<std::string>();
+                return self.start_transmit(s);
+            } else {
+                throw py::type_error("start_transmit() data must be str or bytes");
+            }
+        }, py::arg("data"), "Start non-blocking transmission (interrupt triggers when done). Returns status code (0 = success)")
+        .def("finish_transmit", &SX1262Wrapper::finish_transmit,
+            "Clean up transmitter after transmission is finished (powers down RF switch, puts radio in standby)")
+        .def("start_receive", &SX1262Wrapper::start_receive,
+            py::arg("timeout_ms") = 0,
+            "Start non-blocking packet reception (0 = continuous listen mode until packet arrives). Returns status code (0 = success)")
+        .def("read_data", &SX1262Wrapper::read_data,
+            py::arg("return_none_on_error") = true,
+            "Read packet data after receiving an interrupt alert. Returns Packet or None")
+        .def("set_packet_received_action", [](SX1262Wrapper& self, py::function func) {
+            self.set_packet_received_action([func]() {
+                py::gil_scoped_acquire acquire;
+                try {
+                    func();
+                } catch (const py::error_already_set& e) {
+                    fprintf(stderr, "Exception in Python packet_received callback: %s\n", e.what());
+                }
+            });
+        }, py::arg("callback"), "Set a Python callback function to be called when a complete packet is received via interrupt")
+        .def("clear_packet_received_action", &SX1262Wrapper::clear_packet_received_action,
+            "Clear the packet received callback")
+        .def("set_packet_sent_action", [](SX1262Wrapper& self, py::function func) {
+            self.set_packet_sent_action([func]() {
+                py::gil_scoped_acquire acquire;
+                try {
+                    func();
+                } catch (const py::error_already_set& e) {
+                    fprintf(stderr, "Exception in Python packet_sent callback: %s\n", e.what());
+                }
+            });
+        }, py::arg("callback"), "Set a Python callback function to be called when packet transmission finishes via interrupt")
+        .def("clear_packet_sent_action", &SX1262Wrapper::clear_packet_sent_action,
+            "Clear the packet sent callback")
+        .def_property_readonly("has_received", &SX1262Wrapper::has_received,
+            "True if a packet has been received via interrupt since last read")
+        .def_property_readonly("has_sent", &SX1262Wrapper::has_sent,
+            "True if packet transmission finished via interrupt")
+        .def("clear_flags", &SX1262Wrapper::clear_flags,
+            "Reset internal interrupt status flags")
+
+        // ---------------------------------------------------------------------
+        // 3. Power & Mode Management
+        // ---------------------------------------------------------------------
         .def("standby", &SX1262Wrapper::standby,
             py::arg("mode") = 1,
             "Enter standby mode (1 = STDBY_RC, 2 = STDBY_XOSC)")
         .def("sleep", &SX1262Wrapper::sleep,
             py::arg("retain_config") = false,
             "Enter low-power sleep mode")
+
+        // ---------------------------------------------------------------------
+        // 4. Runtime RF & Modem Settings
+        // ---------------------------------------------------------------------
         .def("set_frequency", &SX1262Wrapper::set_frequency,
             py::arg("freq"),
             "Change carrier frequency in MHz (e.g. 866.5)")
         .def("set_bandwidth", &SX1262Wrapper::set_bandwidth,
             py::arg("bw"),
-            "Change LoRa bandwidth in kHz (e.g. 125.0)")
+            "Change LoRa bandwidth in kHz (e.g. 125.0, 250.0, 500.0)")
         .def("set_spreading_factor", &SX1262Wrapper::set_spreading_factor,
             py::arg("sf"),
             "Change LoRa spreading factor (5 - 12)")
@@ -120,6 +190,30 @@ PYBIND11_MODULE(pyradiolib, m) {
         .def("set_output_power", &SX1262Wrapper::set_output_power,
             py::arg("power"),
             "Change transmission output power in dBm (-9 to +22 dBm)")
+        .def("set_sync_word", &SX1262Wrapper::set_sync_word,
+            py::arg("sync_word"),
+            py::arg("control_bits") = 0x44,
+            "Set 1-byte LoRa sync word (e.g. 0x12 for private, 0x34 for public/LoRaWAN)")
+        .def("set_current_limit", &SX1262Wrapper::set_current_limit,
+            py::arg("current_limit"),
+            "Set over-current protection limit in mA (range: 45 - 240 mA; 0 to disable)")
+        .def("set_preamble_length", &SX1262Wrapper::set_preamble_length,
+            py::arg("preamble_length"),
+            "Set LoRa preamble length in symbols (range: 0 - 65535)")
+        .def("set_crc", &SX1262Wrapper::set_crc,
+            py::arg("enable"),
+            "Enable (True/2) or disable (False/0) LoRa CRC checksum")
+        .def("set_tcxo", &SX1262Wrapper::set_tcxo,
+            py::arg("voltage"),
+            py::arg("delay") = 5000,
+            "Set TCXO reference voltage (1.6 - 3.3V, or 0 to disable for XTAL crystals)")
+        .def("set_dio2_as_rf_switch", &SX1262Wrapper::set_dio2_as_rf_switch,
+            py::arg("enable") = true,
+            "Configure DIO2 pin to control RF switch automatically")
+
+        // ---------------------------------------------------------------------
+        // 5. Signal Quality & Status Queries
+        // ---------------------------------------------------------------------
         .def("get_rssi", &SX1262Wrapper::get_rssi,
             "Get RSSI of the last received packet in dBm")
         .def("get_snr", &SX1262Wrapper::get_snr,
@@ -133,6 +227,10 @@ PYBIND11_MODULE(pyradiolib, m) {
         .def("get_status_text", [](SX1262Wrapper& self) {
             return SX1262Wrapper::get_status_text(self.get_last_status());
         }, "Human-readable description of the most recent status code")
+
+        // ---------------------------------------------------------------------
+        // 6. Resource Management & Context Manager
+        // ---------------------------------------------------------------------
         .def("close", &SX1262Wrapper::close,
             "Release GPIO, SPI, and radio hardware resources")
         .def("__enter__", [](SX1262Wrapper& self) -> SX1262Wrapper& {

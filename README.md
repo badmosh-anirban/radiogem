@@ -200,8 +200,11 @@ The `examples/` directory contains complete runnable examples:
 | Script | Purpose |
 | :--- | :--- |
 | [`examples/native_test.cpp`](examples/native_test.cpp) | Native C++ hardware verification executable |
-| [`examples/basic_tx.py`](examples/basic_tx.py) | Python continuous LoRa transmitter |
-| [`examples/basic_rx.py`](examples/basic_rx.py) | Python continuous LoRa receiver |
+| [`examples/basic_tx.py`](examples/basic_tx.py) | Blocking LoRa transmitter |
+| [`examples/basic_rx.py`](examples/basic_rx.py) | Blocking LoRa receiver |
+| [`examples/interrupt_tx.py`](examples/interrupt_tx.py) | **Non-blocking / Interrupt transmitter** (`start_transmit`, callbacks) |
+| [`examples/interrupt_rx.py`](examples/interrupt_rx.py) | **Non-blocking / Interrupt receiver** (continuous listen, callbacks) |
+| [`examples/change_settings.py`](examples/change_settings.py) | **Runtime settings demo** (frequency, BW, SF, sync word, power, CRC, TCXO) |
 | [`examples/basic_tx_rx.py`](examples/basic_tx_rx.py) | Interactive CLI tool with configurable RF parameters |
 | [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals |
 
@@ -212,11 +215,22 @@ From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`
 # If running directly after building in build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
 
-# Run TX:
+# Run blocking TX:
 python3 examples/basic_tx.py
 
-# Run RX:
+# Run blocking RX:
 python3 examples/basic_rx.py
+
+
+# Run non-blocking interrupt TX:
+python3 examples/interrupt_tx.py
+
+# Run non-blocking interrupt RX (continuous mode, no timeouts):
+python3 examples/interrupt_rx.py
+
+
+# Run runtime settings demo:
+python3 examples/change_settings.py
 
 # Run with gpiozero:
 python3 examples/gpiozero_coexist.py
@@ -243,9 +257,40 @@ SX1262(
 ```
 
 #### Methods:
+##### 1. Modem Initialization:
 - `begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, sync_word=0x12, power=10, preamble_length=8, tcxo_voltage=1.6, use_regulator_ldo=False) -> int`: Initializes LoRa modem. Returns `0` on success.
-- `transmit(data: Union[str, bytes]) -> int`: Transmits packet. Releases GIL. Returns `0` on success.
-- `receive(timeout_ms: int = 0, return_none_on_error: bool = True) -> Optional[Packet]`: Receives packet. Releases GIL.
+
+##### 2. Blocking TX / RX:
+- `transmit(data: Union[str, bytes]) -> int`: Transmits packet (blocking until TX finishes). Releases GIL. Returns `0` on success.
+- `receive(timeout_ms: int = 0, return_none_on_error: bool = True) -> Optional[Packet]`: Receives packet (blocking with timeout). Releases GIL.
+
+##### 3. Non-Blocking / Interrupt TX / RX:
+- `start_transmit(data: Union[str, bytes]) -> int`: Initiates packet transmission asynchronously.
+- `finish_transmit() -> int`: Cleans up transmitter and powers down RF switch after transmission.
+- `start_receive(timeout_ms: int = 0) -> int`: Puts radio into continuous listening mode (`0` = no timeout).
+- `read_data(return_none_on_error: bool = True) -> Optional[Packet]`: Reads received packet data from the buffer.
+- `set_packet_received_action(callback: Callable[[], None]) -> None`: Registers a Python callback invoked when a packet arrives.
+- `clear_packet_received_action() -> None`: Unregisters the packet received callback.
+- `set_packet_sent_action(callback: Callable[[], None]) -> None`: Registers a Python callback invoked when transmission completes.
+- `clear_packet_sent_action() -> None`: Unregisters the packet sent callback.
+- `radio.has_received`: Property returning `True` if a packet was received via interrupt.
+- `radio.has_sent`: Property returning `True` if transmission finished via interrupt.
+- `clear_flags() -> None`: Resets the interrupt status flags.
+
+##### 4. Runtime RF & Modem Settings:
+- `set_frequency(freq: float) -> int`: Sets carrier frequency in MHz.
+- `set_bandwidth(bw: float) -> int`: Sets bandwidth in kHz (125.0, 250.0, 500.0, etc.).
+- `set_spreading_factor(sf: int) -> int`: Sets spreading factor (5 to 12).
+- `set_coding_rate(cr: int) -> int`: Sets coding rate denominator (5 to 8).
+- `set_output_power(power: int) -> int`: Sets transmission power in dBm (-9 to +22).
+- `set_sync_word(sync_word: int, control_bits: int = 0x44) -> int`: Sets LoRa sync word (e.g. `0x12` private, `0x34` public).
+- `set_current_limit(current_limit: float) -> int`: Sets over-current protection in mA (45 - 240 mA; 0 to disable).
+- `set_preamble_length(preamble_length: int) -> int`: Sets preamble length in symbols (0 to 65535).
+- `set_crc(enable: bool) -> int`: Enables (`True`) or disables (`False`) CRC checksum.
+- `set_tcxo(voltage: float, delay: int = 5000) -> int`: Sets TCXO reference voltage (1.6 - 3.3V, or 0.0 for XTAL).
+- `set_dio2_as_rf_switch(enable: bool = True) -> int`: Configures DIO2 to control RF switch automatically.
+
+##### 5. Power & Mode Management:
 - `standby(mode: int = 1) -> int`: Enters standby mode (`1` = STDBY_RC, `2` = STDBY_XOSC).
 - `sleep(retain_config: bool = False) -> int`: Enters low power sleep mode.
 - `set_frequency(freq: float) -> int`: Sets carrier frequency in MHz.

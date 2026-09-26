@@ -1,3 +1,130 @@
+# #2
+
+I have reviewed [`other_functions.md`](other_functions.md). You have raised great questions regarding:
+1. **Two modes of Transmit** (Blocking vs Non-blocking/Interrupt)
+2. **Two modes of Receive** (Blocking vs Non-blocking/Interrupt)
+3. **Runtime Radio Settings** (`setSyncWord`, `setCurrentLimit`, `setCRC`, `setTCXO`, `setDio2AsRfSwitch`, etc.)
+
+**I have now implemented all of these features into `pyradiolib`**! Below is how each is designed, how the C++-to-Python translation works, and how you can use them.
+
+---
+
+### 1. Transmit: Blocking vs Non-Blocking
+
+#### A. Blocking Transmit: `radio.transmit(data)`
+* **In C++**: Calls RadioLib's `radio->transmit(data)`.
+* **In Python**: At the Python call site, it appears synchronous, but **it releases the Python GIL** (`py::call_guard<py::gil_scoped_release>`).
+* **Why this matters**: While the SX1262 is transmitting over the air, Python's runtime is **not blocked**. Other background threads, `gpiozero` buttons/LEDs, or `asyncio` loops continue executing smoothly.
+
+#### B. Non-Blocking / Interrupt Transmit: `start_transmit` + `finish_transmit`
+In C++ RadioLib:
+```cpp
+radio.setPacketSentAction(onSent);
+radio.startTransmit(str);
+// later when interrupt fires:
+radio.finishTransmit();
+```
+**How we translated this to Python**:
+```python
+# Option 1: Using a callback
+def on_sent():
+    print("Packet transmission complete!")
+
+radio.set_packet_sent_action(on_sent)
+radio.start_transmit("Hello Non-blocking")
+
+# ... do other Python work while packet is transmitting ...
+
+# When done, finalize the transmitter (disables RF switch, enters standby):
+radio.finish_transmit()
+
+# Option 2: Using the boolean flag (no callback needed)
+radio.start_transmit("Hello Non-blocking")
+while not radio.has_sent:
+    time.sleep(0.01)
+radio.finish_transmit()
+```
+* **See the complete working example**: [`examples/interrupt_tx.py`](examples/interrupt_tx.py).
+
+---
+
+### 2. Receive: Blocking vs Non-Blocking
+
+#### A. Blocking Receive: `radio.receive(timeout_ms=5000)`
+* **In C++**: Calls RadioLib's `radio->receive(buffer, 0, timeout)`.
+* **In Python**: Blocks until a packet arrives or the timeout expires, while **releasing the GIL** so other Python tasks continue running.
+
+#### B. Non-Blocking / Interrupt Receive: `start_receive` + `read_data`
+In C++ RadioLib:
+```cpp
+radio.setPacketReceivedAction(onReceived);
+radio.startReceive(); // continuous listen mode
+// when interrupt fires:
+radio.readData(str);
+```
+**The C++-to-Python Challenge**:
+RadioLib's `setPacketReceivedAction` takes a raw C function pointer `void (*func)(void)` called by `lgpio`'s background OS alert thread. In Python, an external C thread cannot execute Python bytecode without first acquiring Python's Global Interpreter Lock (GIL)—otherwise Python segfaults.
+
+**How we solved this**:
+In [`src/bindings.cpp`](src/bindings.cpp), the wrapper automatically acquires the GIL (`py::gil_scoped_acquire`) inside the alert handler before invoking your Python callback, safely catches any Python exceptions, and releases the GIL.
+
+**How to use it in Python**:
+```python
+# 1. Define your callback
+def on_packet():
+    packet = radio.read_data()
+    if packet:
+        print(f"Received: {packet.text} | RSSI: {packet.rssi} dBm")
+    # Re-arm continuous listening mode for the next packet
+    radio.start_receive()
+
+# 2. Register callback and start continuous receive (no timeout!)
+radio.set_packet_received_action(on_packet)
+radio.start_receive()
+
+# 3. Main thread is 100% free!
+while True:
+    time.sleep(1)
+```
+*(Alternatively, you can poll `if radio.has_received: packet = radio.read_data()` without defining a callback).*
+* **See the complete working example**: [`examples/interrupt_rx.py`](examples/interrupt_rx.py).
+
+---
+
+### 3. Full Runtime Settings (Now Implemented!)
+
+All the runtime configuration methods mentioned in [`other_functions.md`](other_functions.md) are now exposed directly on the `SX1262` object:
+
+| Python Method | C++ RadioLib Equivalent | Description |
+| :--- | :--- | :--- |
+| `radio.set_frequency(868.0)` | `setFrequency(868.0)` | Change carrier frequency (MHz) |
+| `radio.set_bandwidth(250.0)` | `setBandwidth(250.0)` | Change LoRa bandwidth (kHz) |
+| `radio.set_spreading_factor(9)` | `setSpreadingFactor(9)` | Change Spreading Factor (5 - 12) |
+| `radio.set_coding_rate(7)` | `setCodingRate(7)` | Change Coding Rate (5 - 8 for 4/5 - 4/8) |
+| `radio.set_output_power(14)` | `setOutputPower(14)` | Change output power (-9 to +22 dBm) |
+| `radio.set_sync_word(0x12)` | `setSyncWord(0x12)` | LoRa sync word (`0x12` private, `0x34` public) |
+| `radio.set_current_limit(80.0)` | `setCurrentLimit(80)` | Over-current limit (45 - 240 mA; 0 to disable) |
+| `radio.set_preamble_length(12)` | `setPreambleLength(12)` | Preamble length (symbols) |
+| `radio.set_crc(True)` | `setCRC(2)` / `setCRC(false)` | Enable (`True`/`2`) or disable (`False`/`0`) CRC |
+| `radio.set_tcxo(1.6)` | `setTCXO(1.6)` | Set TCXO reference voltage (or 0 for XTAL) |
+| `radio.set_dio2_as_rf_switch(True)`| `setDio2AsRfSwitch()` | Configure DIO2 to drive RF switch |
+
+* **See the complete working example**: [`examples/change_settings.py`](examples/change_settings.py).
+
+---
+
+### To Build the Updated Module on your Raspberry Pi:
+
+```bash
+cd radiogem
+
+# If using pip in your .venv:
+pip install .
+
+# Or if using cmake directly:
+cd build && make -j4
+```
+
 # #1
 
 I have analyzed both [`error1.txt`](error1.txt) and [`error2.txt`](error2.txt). Both issues have been identified and the code has been updated.
