@@ -1,3 +1,71 @@
+# #3
+
+### Answering Your Questions
+
+#### 1. Do `setup.py` and `pyproject.toml` do the same thing?
+
+**No, they have very different and complementary jobs:**
+
+* **`pyproject.toml` is the Orchestrator (Declarative)**:
+  * It tells modern Python packaging tools (PEP 517/518 standard):
+    1. *What build engine should be used?* (`build-backend = "setuptools.build_meta"`)
+    2. *What tools must be installed before starting the build?* (`requires = ["setuptools", "wheel", "cmake", "pybind11"]`)
+    3. *What is the metadata?* (Author: Anirban Giri, License: MIT, Name: pyradiolib, etc.)
+  * It is purely a static data configuration file.
+
+* **`setup.py` is the Worker (Imperative Script)**:
+  * It contains executable Python code that tells the build tool **how to compile custom C++ code**.
+  * `pyproject.toml` by itself does not know how to invoke CMake, find a C++ compiler, pass `-j4`, or build `.cpp` files. That custom compilation logic lives inside your `class CMakeBuild(build_ext)` in `setup.py`.
+
+---
+
+#### 2. When I run `pip install .`, which of them starts working?
+
+Both work in a specific sequence: **`pyproject.toml` runs first, and it delegates to `setup.py` second.**
+
+```text
+               User runs: pip install .
+                          │
+                          ▼
+            Step 1: pip reads pyproject.toml
+                          │
+     ┌────────────────────┴────────────────────┐
+     ▼                                         ▼
+Reads [build-system].requires        Reads [build-system].build-backend
+Installs: cmake, pybind11, etc.      Identifies "setuptools.build_meta"
+     │                                         │
+     └────────────────────┬────────────────────┘
+                          │
+                          ▼
+     Step 2: setuptools.build_meta invokes setup.py
+                          │
+                          ▼
+           setup.py runs your custom class:
+            - CMakeBuild.build_extension()
+            - Runs: cmake -DCMAKE_BUILD_TYPE=Release ..
+            - Runs: cmake --build . --target pyradiolib
+                          │
+                          ▼
+     Produces: pyradiolib.cpython-313-aarch64-linux-gnu.so
+                          │
+                          ▼
+     Step 3: pip installs the .so into site-packages/
+```
+
+1. **`pyproject.toml` starts first**: `pip` checks it to know what build system you are using and installs `cmake` and `pybind11` into a temporary build environment.
+2. **`setup.py` is called second**: `setuptools` hands control to `setup.py`, which executes your custom CMake compilation steps.
+
+---
+
+#### 3. Are both required? Or is just `pyproject.toml` sufficient?
+
+* **For pure-Python projects** (projects with only `.py` files):
+  * `pyproject.toml` alone is sufficient; `setup.py` is no longer needed.
+* **For THIS project (`pyradiolib`)**:
+  * **Both are required.**
+  * Because `pyradiolib` is a hybrid C++/Python project that compiles C++ code using CMake and pybind11, `setup.py` is required to provide the custom `CMakeBuild` extension instructions.
+
+
 # #2
 
 I have reviewed [`other_functions.md`](other_functions.md). You have raised great questions regarding:

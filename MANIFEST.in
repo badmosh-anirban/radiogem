@@ -1,0 +1,23 @@
+# Include documentation and licensing
+include README.md
+include LICENSE
+include pyproject.toml
+include setup.py
+
+# Include CMake configuration
+include CMakeLists.txt
+include RadioLib/CMakeLists.txt
+include RadioLib/license.txt
+
+# Include C++ source and header files
+recursive-include hal *.h
+recursive-include src *.h *.cpp
+recursive-include RadioLib/src *
+
+# Exclude temporary files, notes, and build artifacts
+global-exclude *.py[cod] __pycache__ *.so *.dylib *.a *.o .DS_Store
+prune others
+prune .agents
+prune RadioLib/.github
+prune RadioLib/examples
+prune RadioLib/extras

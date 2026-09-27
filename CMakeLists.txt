@@ -22,11 +22,17 @@ if(NOT LGPIO_LIB)
 endif()
 
 # ==============================================================================
-# Target 1: Standalone Native C++ Verification Executable (Stage 1)
+# Target 1: Standalone Native C++ Verification Executable (Optional)
 # ==============================================================================
-add_executable(native_test examples/native_test.cpp)
-target_include_directories(native_test PRIVATE ${PYRADIOLIB_INCLUDES})
-target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
+option(BUILD_NATIVE_TEST "Build native C++ standalone verification executable" OFF)
+
+if(BUILD_NATIVE_TEST OR (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp" AND NOT DEFINED SKBUILD))
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+        add_executable(native_test examples/native_test.cpp)
+        target_include_directories(native_test PRIVATE ${PYRADIOLIB_INCLUDES})
+        target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
+    endif()
+endif()
 
 # ==============================================================================
 # Target 2: pyradiolib Python Extension Module (pybind11)

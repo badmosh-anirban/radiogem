@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "cmake>=3.18",
+    "pybind11>=2.13.0"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,18 +13,42 @@ version = "0.1.0"
 description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
 readme = "README.md"
 requires-python = ">=3.8"
+license = { text = "MIT" }
 authors = [
-    { name = "RadioLib Community" }
+    { name = "Anirban Giri" }
+]
+keywords = [
+    "lora",
+    "radiolib",
+    "sx1262",
+    "raspberry-pi",
+    "iot",
+    "radio",
+    "pybind11",
+    "lgpio"
 ]
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: C++",
     "Operating System :: POSIX :: Linux",
-    "Topic :: Communications :: Ham Radio"
+    "Topic :: Communications :: Ham Radio",
+    "Topic :: Software Development :: Embedded Systems"
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "gpiozero"
+    "gpiozero",
+    "build",
+    "twine"
 ]
