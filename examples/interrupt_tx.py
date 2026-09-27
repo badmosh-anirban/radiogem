@@ -13,6 +13,7 @@ from pyradiolib import SX1262, ERR_NONE, get_status_text
 transmitted_flag = False
 
 def main():
+    global transmitted_flag
     print("=" * 60)
     print(" pyradiolib - Non-blocking Interrupt Transmitter Example")
     print("=" * 60)
