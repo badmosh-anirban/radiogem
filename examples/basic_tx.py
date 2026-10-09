@@ -23,14 +23,14 @@ def main():
     print("=" * 45)
 
     # 1. Create the radio instance
-    # SPI Channel 1 (CE1), NSS=7, DIO1=17, RESET=22, BUSY=24
+    # SPI Channel 1 (CE1), NSS=7, DIO1=27, RESET=22, BUSY=24
     radio = SX1262(
         spi_channel=1,
         spi_speed=2000000,
         spi_device=0,
         gpio_device=0,
         nss=7,
-        dio1=17,
+        dio1=27,
         reset=22,
         busy=24
     )

@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--power", type=int, default=10, help="TX power in dBm (default: 10)")
     parser.add_argument("--spi-ch", type=int, default=1, help="SPI Channel (default: 1 for CE1)")
     parser.add_argument("--nss", type=int, default=7, help="NSS pin (default: 7)")
-    parser.add_argument("--dio1", type=int, default=17, help="DIO1 pin (default: 17)")
+    parser.add_argument("--dio1", type=int, default=27, help="DIO1 pin (default: 27)")
     parser.add_argument("--rst", type=int, default=22, help="Reset pin (default: 22)")
     parser.add_argument("--busy", type=int, default=24, help="Busy pin (default: 24)")
     parser.add_argument("--tcxo", type=float, default=1.6, help="TCXO voltage (set 0.0 for XTAL crystals)")

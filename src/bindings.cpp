@@ -71,7 +71,7 @@ PYBIND11_MODULE(pyradiolib, m) {
             py::arg("spi_device") = 0,
             py::arg("gpio_device") = 0,
             py::arg("nss") = 7,
-            py::arg("dio1") = 17,
+            py::arg("dio1") = 27,
             py::arg("reset") = 22,
             py::arg("busy") = 24,
             "Instantiate SX1262 radio with SPI and GPIO pin assignments")

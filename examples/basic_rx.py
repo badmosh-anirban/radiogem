@@ -17,7 +17,7 @@ def main():
         spi_device=0,
         gpio_device=0,
         nss=7,
-        dio1=17,
+        dio1=27,
         reset=22,
         busy=24
     )

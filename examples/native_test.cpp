@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     bool rxMode = false;
     uint8_t spiChannel = 1;
     uint32_t nssPin = 7;
-    uint32_t dio1Pin = 17;
+    uint32_t dio1Pin = 27;
     uint32_t rstPin = 22;
     uint32_t busyPin = 24;
 

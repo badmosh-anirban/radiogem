@@ -7,7 +7,7 @@ Pin ownership layout:
 - RadioLib / PiHal:
     SPI0 CE1 (Channel 1)
     NSS:   GPIO 7
-    DIO1:  GPIO 17
+    DIO1:  GPIO 27
     RESET: GPIO 22
     BUSY:  GPIO 24
 - gpiozero:
@@ -42,11 +42,11 @@ def main():
         has_gpiozero = False
 
     # 2. Initialize pyradiolib radio with dedicated SX1262 pins
-    print("[pyradiolib] Initializing SX1262 on SPI1, NSS=7, DIO1=17, RST=22, BUSY=24...")
+    print("[pyradiolib] Initializing SX1262 on SPI1, NSS=7, DIO1=27, RST=22, BUSY=24...")
     radio = SX1262(
         spi_channel=1,
         nss=7,
-        dio1=17,
+        dio1=27,
         reset=22,
         busy=24
     )

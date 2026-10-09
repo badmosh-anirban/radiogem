@@ -1,9 +1,9 @@
 [build-system]
 requires = [
-    "setuptools>=61.0",
+    "setuptools>=80.8.0",
     "wheel",
-    "cmake>=3.18",
-    "pybind11>=2.13.0"
+    "cmake>=4.0.0",
+    "pybind11>=3.0.0"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -13,7 +13,7 @@ version = "0.1.0"
 description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
+license ="MIT"
 authors = [
     { name = "Anirban Giri" }
 ]
@@ -30,7 +30,6 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.8",

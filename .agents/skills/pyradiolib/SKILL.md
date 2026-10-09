@@ -241,12 +241,15 @@ pip install .
 pip install -e . --no-build-isolation
 ```
 
-### C. Building PyPI Distribution Packages (sdist & wheel)
+### C. Building PyPI Distribution Packages (sdist)
 ```bash
 pip install --upgrade build twine
 rm -rf build/ dist/ *.egg-info
-python -m build
-# Generates dist/pyradiolib-0.1.0.tar.gz and dist/pyradiolib-*-linux_*.whl
+
+# Build ONLY the source distribution (.tar.gz):
+# (PyPI rejects raw linux_aarch64 wheels; sdist compiles cleanly on user's target Pi)
+python -m build --sdist
+
 twine check dist/*
 ```
 

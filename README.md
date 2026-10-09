@@ -1,6 +1,9 @@
 # pyradiolib
 
-Python bindings for the **RadioLib C++ library** targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
+Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
+
+{replace}
+Picture/ demo video
 
 ---
 
@@ -36,8 +39,9 @@ Linux SPI    Linux GPIO
 ```
 
 Key principles:
+
 - **No Python rewrite** of radio protocols or register logic — wraps tested RadioLib C++ directly.
-- **Hardware abstraction** through RadioLib's official `PiHal.h` using `lgpio`.
+- **Hardware abstraction** through RadioLib's official `PiHal.h`([my version](hal/PiHal.h) is slightly modified) using `lgpio`.
 - **GIL released** during transmission and packet reception so Python asyncio, threads, and UI don't block.
 - **`gpiozero` coexistence**: SX1262 pins are owned by `PiHal`, leaving other GPIO pins completely free for `gpiozero` without driver conflict.
 
@@ -45,88 +49,56 @@ Key principles:
 
 ## 2. Hardware Wiring (Defaults)
 
-| Pin Function | SX1262 Pin | Raspberry Pi Pin (BCM) | Description |
-| :--- | :--- | :--- | :--- |
-| **MOSI** | MOSI | GPIO 10 (SPI0 MOSI) | SPI Data to Radio |
-| **MISO** | MISO | GPIO 9 (SPI0 MISO) | SPI Data from Radio |
-| **SCK** | SCK | GPIO 11 (SPI0 SCLK) | SPI Clock |
-| **NSS / CS** | NSS | GPIO 7 (CE1) or GPIO 8 (CE0) | Chip Select (Default: 7) |
-| **DIO1** | DIO1 | GPIO 17 | Interrupt / Packet Ready |
-| **RESET** | NRST | GPIO 22 | Hardware Reset |
-| **BUSY** | BUSY | GPIO 24 | Radio Busy Line |
-| **Power** | 3.3V | 3.3V Pin | Power supply |
-| **Ground** | GND | GND Pin | Ground |
+| Pin Function | SX1262 Pin | Raspberry Pi Pin (BCM)       | Description              |
+| :----------- | :--------- | :--------------------------- | :----------------------- |
+| **MOSI**     | MOSI       | GPIO 10 (SPI0 MOSI)          | SPI Data to Radio        |
+| **MISO**     | MISO       | GPIO 9 (SPI0 MISO)           | SPI Data from Radio      |
+| **SCK**      | SCK        | GPIO 11 (SPI0 SCLK)          | SPI Clock                |
+| **NSS / CS** | NSS        | GPIO 7 (CE1) or GPIO 8 (CE0) | Chip Select (Default: 7) |
+| **DIO1**     | DIO1       | GPIO 27                      | Interrupt / Packet Ready |
+| **RESET**    | NRST       | GPIO 22                      | Hardware Reset           |
+| **BUSY**     | BUSY       | GPIO 24                      | Radio Busy Line          |
+| **Power**    | 3.3V       | 3.3V Pin                     | Power supply             |
+| **Ground**   | GND        | GND Pin                      | Ground                   |
 
-*All pin assignments are completely configurable when creating the `SX1262` object.*
+_All pin assignments are completely configurable when creating the `SX1262` object._
 
----
+I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not affiliated)
+
+{replace}
+schematic
 
 ## 3. Raspberry Pi Prerequisites
 
 ### Step 1: Enable SPI
+
 Open the Raspberry Pi configuration tool:
+
 ```bash
 sudo raspi-config
 ```
+
 Navigate to **Interface Options** -> **SPI** -> **Yes** to enable SPI, then finish.
 
-### Step 2: Install Build Dependencies
+### Step 2: Install required Dependencies
+
 ```bash
 sudo apt update
-sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
+sudo apt install -y liblgpio-dev python3-dev python3-pip python3-gpiozero
 ```
 
----
-
-## 4. Build Instructions
-
-### Option A: Build via CMake (Recommended for Native + Python)
+### Step 3: Create virtual environment and install the library
 
 ```bash
-cd radiogem
+python3 -m venv .venv --system-site-packages
+source ./venv/bin/activate
 
-# Create build directory
-mkdir -p build && cd build
-
-# Configure and compile
-cmake ..
-make -j4
+pip install pyradiolib
 ```
 
-This builds two targets:
-1. `native_test` — Standalone C++ verification binary.
-2. `pyradiolib.so` — Python extension module.
+_If you wish to build from the source follow this guide: [building&publishing.md](building&publishing.md)_
 
-#### Test Native C++ First (Stage 1 Verification)
-Before using Python, verify your SPI wiring and module connection natively:
-```bash
-# In build/ directory:
-./native_test --tx
-```
-Or for receiver mode:
-```bash
-./native_test --rx
-```
-
----
-
-### Option B: Install via pip
-
-To install `pyradiolib` directly into your Python environment or virtual environment:
-
-```bash
-cd radiogem
-
-# Install directly
-pip install .
-
-# Or for editable/development mode
-pip install -e .
-```
-
----
-
-## 5. Python Quick Start
+## 4. Python Quick Start
 
 ### Basic Transmitter (TX)
 
@@ -138,7 +110,7 @@ radio = SX1262(
     spi_channel=1,      # SPI CE1
     spi_speed=2000000,  # 2 MHz
     nss=7,              # NSS pin
-    dio1=17,            # DIO1 pin
+    dio1=27,            # DIO1 pin
     reset=22,           # RESET pin
     busy=24             # BUSY pin
 )
@@ -167,7 +139,7 @@ if status == ERR_NONE:
 ```python
 from pyradiolib import SX1262, ERR_NONE
 
-radio = SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24)
+radio = SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
 radio.begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, power=10)
 
 print("Listening for packets...")
@@ -185,7 +157,7 @@ while True:
 ### Context Manager Usage
 
 ```python
-with SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24) as radio:
+with SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24) as radio:
     radio.begin(frequency=866.5)
     radio.transmit("Self-closing radio session")
 # Radio, SPI, and GPIO handles are automatically released here
@@ -193,24 +165,27 @@ with SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24) as radio:
 
 ---
 
-## 6. Examples
+## 5. Examples
 
 The `examples/` directory contains complete runnable examples:
 
-| Script | Purpose |
-| :--- | :--- |
-| [`examples/native_test.cpp`](examples/native_test.cpp) | Native C++ hardware verification executable |
-| [`examples/basic_tx.py`](examples/basic_tx.py) | Blocking LoRa transmitter |
-| [`examples/basic_rx.py`](examples/basic_rx.py) | Blocking LoRa receiver |
-| [`examples/interrupt_tx.py`](examples/interrupt_tx.py) | **Non-blocking / Interrupt transmitter** (`start_transmit`, callbacks) |
-| [`examples/interrupt_rx.py`](examples/interrupt_rx.py) | **Non-blocking / Interrupt receiver** (continuous listen, callbacks) |
-| [`examples/change_settings.py`](examples/change_settings.py) | **Runtime settings demo** (frequency, BW, SF, sync word, power, CRC, TCXO) |
-| [`examples/basic_tx_rx.py`](examples/basic_tx_rx.py) | Interactive CLI tool with configurable RF parameters |
-| [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals |
+| Script                                                         | Purpose                                                                    |
+| :------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [`examples/native_test.cpp`](examples/native_test.cpp)         | Native C++ hardware verification executable                                |
+| [`examples/basic_tx.py`](examples/basic_tx.py)                 | Blocking LoRa transmitter                                                  |
+| [`examples/basic_rx.py`](examples/basic_rx.py)                 | Blocking LoRa receiver                                                     |
+| [`examples/interrupt_tx.py`](examples/interrupt_tx.py)         | **Non-blocking / Interrupt transmitter** (`start_transmit`, callbacks)     |
+| [`examples/interrupt_rx.py`](examples/interrupt_rx.py)         | **Non-blocking / Interrupt receiver** (continuous listen, callbacks)       |
+| [`examples/change_settings.py`](examples/change_settings.py)   | **Runtime settings demo** (frequency, BW, SF, sync word, power, CRC, TCXO) |
+| [`examples/basic_tx_rx.py`](examples/basic_tx_rx.py)           | Interactive CLI tool with configurable RF parameters                       |
+| [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals                       |
 
 ### Running the examples:
 
-From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`):
+Make sure you are running the following examples after activating your virtual environment.
+
+From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`, for the respective virtual environment):
+
 ```bash
 # If running directly after building in build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
@@ -238,11 +213,12 @@ python3 examples/gpiozero_coexist.py
 
 ---
 
-## 7. Python API Reference
+## 6. Python API Reference
 
 ### `SX1262` Class
 
 #### Constructor:
+
 ```python
 SX1262(
     spi_channel: int = 1,
@@ -250,21 +226,25 @@ SX1262(
     spi_device: int = 0,
     gpio_device: int = 0,
     nss: int = 7,
-    dio1: int = 17,
+    dio1: int = 27,
     reset: int = 22,
     busy: int = 24
 )
 ```
 
 #### Methods:
+
 ##### 1. Modem Initialization:
+
 - `begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, sync_word=0x12, power=10, preamble_length=8, tcxo_voltage=1.6, use_regulator_ldo=False) -> int`: Initializes LoRa modem. Returns `0` on success.
 
 ##### 2. Blocking TX / RX:
+
 - `transmit(data: Union[str, bytes]) -> int`: Transmits packet (blocking until TX finishes). Releases GIL. Returns `0` on success.
 - `receive(timeout_ms: int = 0, return_none_on_error: bool = True) -> Optional[Packet]`: Receives packet (blocking with timeout). Releases GIL.
 
 ##### 3. Non-Blocking / Interrupt TX / RX:
+
 - `start_transmit(data: Union[str, bytes]) -> int`: Initiates packet transmission asynchronously.
 - `finish_transmit() -> int`: Cleans up transmitter and powers down RF switch after transmission.
 - `start_receive(timeout_ms: int = 0) -> int`: Puts radio into continuous listening mode (`0` = no timeout).
@@ -278,6 +258,7 @@ SX1262(
 - `clear_flags() -> None`: Resets the interrupt status flags.
 
 ##### 4. Runtime RF & Modem Settings:
+
 - `set_frequency(freq: float) -> int`: Sets carrier frequency in MHz.
 - `set_bandwidth(bw: float) -> int`: Sets bandwidth in kHz (125.0, 250.0, 500.0, etc.).
 - `set_spreading_factor(sf: int) -> int`: Sets spreading factor (5 to 12).
@@ -291,6 +272,7 @@ SX1262(
 - `set_dio2_as_rf_switch(enable: bool = True) -> int`: Configures DIO2 to control RF switch automatically.
 
 ##### 5. Power & Mode Management:
+
 - `standby(mode: int = 1) -> int`: Enters standby mode (`1` = STDBY_RC, `2` = STDBY_XOSC).
 - `sleep(retain_config: bool = False) -> int`: Enters low power sleep mode.
 - `set_frequency(freq: float) -> int`: Sets carrier frequency in MHz.
@@ -306,6 +288,7 @@ SX1262(
 ### `Packet` Class
 
 Returned by `radio.receive()`:
+
 - `packet.payload` / `packet.data`: Raw bytes of payload.
 - `packet.text`: Payload decoded as UTF-8 string.
 - `packet.rssi`: Signal strength in dBm.
@@ -316,19 +299,20 @@ Returned by `radio.receive()`:
 
 ---
 
-## 8. Common Error Codes & Troubleshooting
+## 7. Common Error Codes & Troubleshooting
 
-| Code | Name | Cause & Solution |
-| :--- | :--- | :--- |
-| `0` | `ERR_NONE` | Operation succeeded. |
-| `-2` | `ERR_CHIP_NOT_FOUND` | Radio chip not responding over SPI. Verify SPI is enabled (`raspi-config`), check NSS/CE pin connection, SPI channel (0 vs 1), and 3.3V power. |
-| `-5` | `ERR_TX_TIMEOUT` | Transmission timed out. Check DIO1 and BUSY pin wiring. |
-| `-6` | `ERR_RX_TIMEOUT` | No packet received within timeout period. |
-| `-7` | `ERR_CRC_MISMATCH` | Packet corrupted during transmission. Check antennas and frequency/SF alignment. |
-| `-706` | `ERR_SPI_CMD_TIMEOUT` | SX1262 command timed out. If your board uses a crystal (XTAL) rather than TCXO, set `tcxo_voltage=0.0`. |
-| `-707` | `ERR_SPI_CMD_INVALID` | Invalid SX1262 command. Check TCXO voltage or chip revision. |
+| Code   | Name                  | Cause & Solution                                                                                                                               |
+| :----- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`    | `ERR_NONE`            | Operation succeeded.                                                                                                                           |
+| `-2`   | `ERR_CHIP_NOT_FOUND`  | Radio chip not responding over SPI. Verify SPI is enabled (`raspi-config`), check NSS/CE pin connection, SPI channel (0 vs 1), and 3.3V power. |
+| `-5`   | `ERR_TX_TIMEOUT`      | Transmission timed out. Check DIO1 and BUSY pin wiring.                                                                                        |
+| `-6`   | `ERR_RX_TIMEOUT`      | No packet received within timeout period.                                                                                                      |
+| `-7`   | `ERR_CRC_MISMATCH`    | Packet corrupted during transmission. Check antennas and frequency/SF alignment.                                                               |
+| `-706` | `ERR_SPI_CMD_TIMEOUT` | SX1262 command timed out. If your board uses a crystal (XTAL) rather than TCXO, set `tcxo_voltage=0.0`.                                        |
+| `-707` | `ERR_SPI_CMD_INVALID` | Invalid SX1262 command. Check TCXO voltage or chip revision.                                                                                   |
 
 ---
+
 # Other
 
 ### Project Architecture & Layout
@@ -339,10 +323,10 @@ Returned by `radio.receive()`:
 ├── setup.py                    # pip install . support with CMakeExtension
 ├── pyproject.toml              # Modern Python packaging configuration
 ├── README.md                   # Full documentation, wiring guide, and API reference
-├── .gitignore                  # Clean ignore list for build artifacts & caches
+├── .gitignore
 │
 ├── hal/
-│   └── PiHal.h                 # Official RadioLib lgpio HAL with safe destructor
+│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifiactions
 │
 ├── src/
 │   ├── sx1262_wrapper.h        # C++ wrapper header & Packet definition
@@ -385,99 +369,3 @@ Returned by `radio.receive()`:
    - Includes [`examples/native_test.cpp`](examples/native_test.cpp) to verify native C++ SPI communication on the Pi before testing Python.
 
 ---
-
-### How to Build & Test on Raspberry Pi
-
-#### 1. Install prerequisites on your Raspberry Pi:
-
-```bash
-sudo apt update
-sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
-```
-
-#### 2. Build via CMake (Builds both native test & Python module):
-
-```bash
-cd radiogem
-mkdir -p build && cd build
-cmake ..
-make -j4
-```
-
-#### 3. Stage 1 — Verify Native C++ first:
-
-```bash
-# In the build/ directory:
-./native_test --tx    # Run transmitter
-# or
-./native_test --rx    # Run receiver
-```
-
-#### 4. Run Python Examples:
-
-```bash
-# From repository root with PYTHONPATH pointing to build/:
-export PYTHONPATH=$PYTHONPATH:$(pwd)/build
-
-# Test transmitter:
-python3 examples/basic_tx.py
-
-# Test receiver:
-python3 examples/basic_rx.py
-
-# Test gpiozero coexistence:
-python3 examples/gpiozero_coexist.py
-```
-
-_(You can also install system/venv-wide with `pip install .`)_
-
----
----
----
-In Python, [`setup.py`](setup.py) is the **build, packaging, and installation configuration script**.
-
-In this specific project, [`setup.py`](setup.py) bridges **Python's package manager (`pip`)** with **C++ CMake compilation**.
-
----
-
-### What it does in this project:
-
-#### 1. Enables `pip install .`
-Because `pyradiolib` is written in C++ (wrapping RadioLib and `lgpio`), Python cannot run it as plain `.py` text files. It must be compiled into a binary shared object library (`pyradiolib.so`).
-
-[`setup.py`](setup.py) allows you (or anyone using your project on a Raspberry Pi) to simply run:
-```bash
-pip install .
-```
-Under the hood, `setup.py` automatically:
-1. Calls `cmake` to configure the C++ project.
-2. Compiles `RadioLib`, `PiHal.h`, `sx1262_wrapper.cpp`, and `bindings.cpp`.
-3. Links against `lgpio`.
-4. Installs the resulting `pyradiolib` module directly into your Python environment (`.venv` or system Python).
-
----
-
-#### 2. Allows importing from anywhere
-Without [`setup.py`](setup.py), after building with CMake, the `.so` file would only live in your `build/` folder, meaning you would have to either:
-- Keep all your Python scripts inside `build/`, or
-- Constantly set `export PYTHONPATH=...`
-
-With `pip install .` (via [`setup.py`](setup.py)), `pyradiolib` is installed into Python's `site-packages`, so any script anywhere on the Raspberry Pi can simply run:
-```python
-from pyradiolib import SX1262
-```
-
----
-
-#### 3. Defines metadata and dependencies
-At the bottom of [`setup.py`](setup.py#L40-L52), it defines:
-- **Package Name**: `pyradiolib`
-- **Version**: `0.1.0`
-- **Target extension**: `pyradiolib` compiled via the custom `CMakeBuild` class.
-
----
-
-### Summary
-- If you prefer manually running `cmake .. && make`, you can do that and use the `.so` directly.
-- [`setup.py`](setup.py) exists so you can install it standardly like any other Python library using **`pip install .`** (or **`pip install -e .`** for development mode).
-

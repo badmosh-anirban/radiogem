@@ -21,7 +21,7 @@ def main():
     radio = SX1262(
         spi_channel=1,
         nss=7,
-        dio1=17,
+        dio1=27,
         reset=22,
         busy=24
     )

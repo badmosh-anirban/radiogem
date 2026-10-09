@@ -47,7 +47,7 @@ public:
         uint8_t spi_device = 0,
         uint8_t gpio_device = 0,
         int32_t nss = 7,
-        int32_t dio1 = 17,
+        int32_t dio1 = 27,
         int32_t reset = 22,
         int32_t busy = 24
     );
