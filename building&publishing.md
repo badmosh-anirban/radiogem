@@ -186,15 +186,13 @@ pip install -e .
 
 Verify the installation:
 
-````bash
+```bash
 python -c "import pyradiolib; radio = pyradiolib.SX1262(); print('pyradiolib installed successfully!')"
 
 # or
-Verify the installation:
+pip show pyradiolib
 
-```bash
-python -c "import pyradiolib; radio = pyradiolib.SX1262(); print('pyradiolib installed successfully!')"
-````
+```
 
 # Compiling, Packaging, and Publishing to PyPI
 
@@ -229,6 +227,9 @@ You can convert your compiled wheel into a PyPI-compliant wheel in 30 seconds us
 sudo apt install -y patchelf
 pip install auditwheel
 
+# delete old build files
+rm -rf build/ dist/ *.egg-info
+
 # 2. Build the wheel and sdist
 python -m build
 
@@ -240,7 +241,7 @@ auditwheel repair dist/pyradiolib-*-linux_aarch64.whl -w wheelhouse/
 twine check wheelhouse/* dist/*.tar.gz
 
 # 5. Upload BOTH the manylinux wheel (for instant 2-second install) and sdist (.tar.gz fallback):
-twine upload --repository testpypi wheelhouse/* dist/*.tar.gz
+twine upload --repository testpypi wheelhouse/* dist/*.tar.gz --verbose
 ```
 
 > [!TIP] > **Best of both worlds**: When you upload both the repaired `manylinux` `.whl` and the `.tar.gz`, users with matching Python/architecture (e.g. Python 3.13 on 64-bit Pi) get an **instant 2-second install**, while users on other Python versions (e.g. Python 3.11) automatically fall back to compiling the `.tar.gz`.
@@ -362,7 +363,7 @@ Once tested and verified, upload to the official PyPI:
 
 1. Upload the files:
    ```bash
-   twine upload dist/*
+   twine upload dist/* --verbose
    ```
 2. When prompted:
 
@@ -370,7 +371,7 @@ Once tested and verified, upload to the official PyPI:
    - **Password**: Paste your official PyPI API token (`pypi-...`)
 
 3. Once complete, your package will be live immediately at:
-   [https://pypi.org/project/pyradiolib/](https://pypi.org/project/pyradiolib/)
+   [https://pypi.org/project/<name>/](https://pypi.org/project/<name>/)
 
 4. **Anyone can now install your package via:**
    ```bash
@@ -394,13 +395,19 @@ When you add new features (e.g. FSK modulation, SX1268 support, CAD scanning):
      ```
 2. **Document changes** in `ChangeLog.md`.
 3. **Rebuild**:
+
    ```bash
    rm -rf build/ dist/ *.egg-info
    python -m build
+
+   # then repair the wheel using auditwheel by following the steps given above.
    ```
+
 4. **Upload to PyPI**:
    ```bash
-   twine upload dist/*
+   # twine check wheelhouse/* dist/*.tar.gz
+   # twine upload dist/*
+   twine upload wheelhouse/* dist/*.tar.gz --verbose
    ```
    Users will automatically receive updates when they run:
    ```bash
