@@ -2,8 +2,7 @@
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
-{replace}
-Picture/ demo video
+<img src="media/hatv1.0.0.jpg" alt="RPI_schematic" width="70%"/>
 
 ---
 
@@ -63,10 +62,9 @@ Key principles:
 
 _All pin assignments are completely configurable when creating the `SX1262` object._
 
-I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not affiliated)
+I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not sponsored, not affiliated)
 
-{replace}
-schematic
+<img src="media/schematicv1.0.0.png" alt="RPI_schematic" width="60%"/>
 
 ## 3. Raspberry Pi Prerequisites
 
@@ -187,7 +185,7 @@ Make sure you are running the following examples after activating your virtual e
 From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`, for the respective virtual environment):
 
 ```bash
-# If running directly after building in build/:
+# If running directly after building(by cmake & make) in build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
 
 # Run blocking TX:
@@ -318,12 +316,15 @@ Returned by `radio.receive()`:
 ### Project Architecture & Layout
 
 ```
-
+├── .gitignore
+├── .gitmodules
+├── building&publishing.md      # Building from source & publishing details
 ├── CMakeLists.txt              # Unified build system (native C++ & Python module)
-├── setup.py                    # pip install . support with CMakeExtension
+├── LICENSE
+├── MANIFEST.in                 # Required by PyPI
 ├── pyproject.toml              # Modern Python packaging configuration
 ├── README.md                   # Full documentation, wiring guide, and API reference
-├── .gitignore
+├── setup.py                    # pip install . support with CMakeExtension
 │
 ├── hal/
 │   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifiactions
@@ -334,11 +335,20 @@ Returned by `radio.receive()`:
 │   └── bindings.cpp            # pybind11 module bindings with GIL release
 │
 ├── examples/
-│   ├── native_test.cpp         # Stage 1: Standalone C++ hardware verification
-│   ├── basic_tx.py             # Stage 4: Python continuous transmitter
-│   ├── basic_rx.py             # Stage 5: Python continuous receiver
-│   ├── basic_tx_rx.py          # Interactive bidirectional CLI utility
-│   └── gpiozero_coexist.py     # Stage 6: gpiozero coexistence demo
+│   ├── basic_tx.py             # Continuous blocking transmitter
+│   ├── basic_rx.py             # Continuous blocking receiver
+│   ├── interrupt_tx.py         # Non-blocking / Interrupt transmitter
+│   ├── interrupt_rx.py         # Non-blocking / Interrupt receiver
+│   ├── basic_tx_rx.py          # Interactive CLI tool with configurable RF parameters
+│   ├── gpiozero_coexist.py     # gpiozero coexistence demo
+│   ├── change_settings.py      # Runtime settings demo
+│   └── native_test.cpp         # Standalone C++ hardware verification
+│
+├── others/                     # Ignore this, not a part of the project
+│
+├── media/                      # Images, videos, etc.
+│
+├── agents/                     # AI skill
 │
 └── RadioLib/                   # RadioLib C++ submodule
 ```

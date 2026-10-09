@@ -1,3 +1,5 @@
+// This is the official Raspberry Pi Hal provided by the RadioLib library with slight modifications
+
 #ifndef PI_HAL_LGPIO_H
 #define PI_HAL_LGPIO_H
 

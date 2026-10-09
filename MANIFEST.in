@@ -17,6 +17,7 @@ recursive-include RadioLib/src *
 # Exclude temporary files, notes, and build artifacts
 global-exclude *.py[cod] __pycache__ *.so *.dylib *.a *.o .DS_Store
 prune others
+prune media
 prune .agents
 prune RadioLib/.github
 prune RadioLib/examples
