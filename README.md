@@ -2,7 +2,7 @@
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
-<img src="media/hatv1.0.0.jpg" alt="RPI_schematic" width="70%"/>
+<img src="media/hatv1.0.0.jpg" alt="RPI_schematic" width="80%"/>
 
 ---
 
@@ -64,7 +64,7 @@ _All pin assignments are completely configurable when creating the `SX1262` obje
 
 I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not sponsored, not affiliated)
 
-<img src="media/schematicv1.0.0.png" alt="RPI_schematic" width="60%"/>
+<img src="media/schematicv1.0.0.png" alt="RPI_schematic" width="80%"/>
 
 ## 3. Raspberry Pi Prerequisites
 

@@ -196,7 +196,10 @@ pip show pyradiolib
 
 # Compiling, Packaging, and Publishing to PyPI
 
-This guide provides end-to-end instructions for compiling, packaging, and publishing your custom pyradiolib Python module to the Python Package Index (PyPI) so anyone in the world can install and use it via pip install
+This guide provides end-to-end instructions for compiling, packaging, and publishing your custom pyradiolib Python module to the Python Package Index (PyPI) so anyone in the world can install and use it via pip install <br>
+
+> [!IMPORTANT]
+> YOU MUST CHANGE THE NAME FROM pyradiolib to <your_custom_name>, below are examples only, so you must change while making your own python module.
 
 ## 1. Binary Wheels vs. Source Distribution (`sdist`)
 
@@ -204,11 +207,11 @@ When publishing Python C++ extensions for Raspberry Pi, it is important to under
 
 ### Option 1: Source Distribution Only (`.tar.gz`) — Simplest & Recommended for v0.1.0
 
-- You upload `pyradiolib-0.1.0.tar.gz`.
-- When a user runs `pip install pyradiolib`:
+- You upload `<your_custom_name>-*.tar.gz`.
+- When a user runs `pip install <your_custom_name>`:
   1. `pip` downloads the `.tar.gz`.
   2. `pip` creates an isolated environment, automatically installs `cmake` and `pybind11` (specified in our `pyproject.toml`).
-  3. `pip` runs CMake and GCC on their Raspberry Pi, compiling `pyradiolib` natively for their exact architecture (whether it's Raspberry Pi 3, 4, 5, Zero, 32-bit or 64-bit).
+  3. `pip` runs CMake and GCC on their Raspberry Pi, compiling your version of pyradiolib `<your_custom_name>` natively for their exact architecture (whether it's Raspberry Pi 3, 4, 5, Zero, 32-bit or 64-bit).
   4. Takes ~1 to 2 minutes on Pi 4/5.
 - **Advantage**: 100% compatible with all Raspberry Pi models and Linux OS versions without cross-compilation headaches.
 
@@ -225,7 +228,7 @@ You can convert your compiled wheel into a PyPI-compliant wheel in 30 seconds us
 ```bash
 # 1. Install patchelf and auditwheel
 sudo apt install -y patchelf
-pip install auditwheel
+pip install auditwheel        # ofc from a avtive venv
 
 # delete old build files
 rm -rf build/ dist/ *.egg-info
@@ -244,7 +247,9 @@ twine check wheelhouse/* dist/*.tar.gz
 twine upload --repository testpypi wheelhouse/* dist/*.tar.gz --verbose
 ```
 
-> [!TIP] > **Best of both worlds**: When you upload both the repaired `manylinux` `.whl` and the `.tar.gz`, users with matching Python/architecture (e.g. Python 3.13 on 64-bit Pi) get an **instant 2-second install**, while users on other Python versions (e.g. Python 3.11) automatically fall back to compiling the `.tar.gz`.
+> [!TIP]
+>
+> **Best of both worlds**: When you upload both the repaired `manylinux` `.whl` and the `.tar.gz`, users with matching Python/architecture (e.g. Python 3.13 on 64-bit Pi) get an **instant 2-second install**, while users on other Python versions (e.g. Python 3.11) automatically fall back to compiling the `.tar.gz`.
 
 ## Building PyPI Distribution Packages (`sdist` & `wheel`)
 
@@ -280,7 +285,7 @@ python -m build --sdist
 > rm -f dist/*.whl
 > ```
 >
-> This leaves only `dist/pyradiolib-0.1.0.tar.gz`, which PyPI will happily accept!
+> This leaves only `dist/pyradiolib-*.tar.gz`, which PyPI will happily accept!
 
 #### Step 4: Verify the Source Distribution Contents
 
@@ -293,10 +298,10 @@ tar -tzvf dist/pyradiolib-*.tar.gz | grep -E "(RadioLib.h|PiHal.h|CMakeLists.txt
 You should see:
 
 ```text
-pyradiolib-0.1.0/CMakeLists.txt
-pyradiolib-0.1.0/hal/PiHal.h
-pyradiolib-0.1.0/RadioLib/CMakeLists.txt
-pyradiolib-0.1.0/RadioLib/src/RadioLib.h
+pyradiolib-*/CMakeLists.txt
+pyradiolib-*/hal/PiHal.h
+pyradiolib-*/RadioLib/CMakeLists.txt
+pyradiolib-*/RadioLib/src/RadioLib.h
 ```
 
 If those lines appear, your source package is **100% complete and self-contained**!
@@ -310,7 +315,7 @@ twine check dist/*
 Output must read:
 
 ```text
-Checking dist/pyradiolib-0.1.0.tar.gz: PASSED
+Checking dist/pyradiolib-*.tar.gz: PASSED
 ```
 
 ---
