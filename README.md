@@ -91,7 +91,7 @@ sudo apt install -y liblgpio-dev python3-dev python3-pip python3-gpiozero
 python3 -m venv .venv --system-site-packages
 source ./venv/bin/activate
 
-pip install pyradiolib
+pip install --no-cache-dir pyradiolib
 ```
 
 _If you wish to build from the source follow this guide: [building&publishing.md](building&publishing.md)_

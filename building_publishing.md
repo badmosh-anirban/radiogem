@@ -51,7 +51,7 @@ sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
 
 ```bash
 # git clone this repo
-git clone https://github.com/badmosh-anirban/pyradiolib
+git clone --recursive-submodules https://github.com/badmosh-anirban/pyradiolib
 cd pyradiolib
 
 # Create build directory
@@ -80,6 +80,15 @@ This builds two targets:
 2. `pyradiolib.so` — Python extension module.
 
 _Because `pyradiolib` is written in C++ (wrapping RadioLib and `lgpio`), Python cannot run it as plain `.py` text files. It must be compiled into a binary shared object library (`pyradiolib.so`)._
+
+> [!IMPORTANT]
+> '--recursive-submodules' flag is required as the RadioLib repo is set as a submodule, if you ignore this flag Git will only clone the parent repository and leave the submodule folders empty.
+>
+> If you have already cloned the repository and are looking at empty folders, open your terminal inside the project root directory and run:
+>
+> ```bash
+> git submodule update --init --recursive
+> ```
 
 #### Step 3: Test Native C++ First:
 
@@ -164,8 +173,7 @@ sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
 #### Step 2: Clone this repo:
 
 ```bash
-git clone https://github.com/badmosh-anirban/pyradiolib
-
+git clone --recursive-submodules https://github.com/badmosh-anirban/pyradiolib
 cd pyradiolib
 ```
 
@@ -228,7 +236,7 @@ You can convert your compiled wheel into a PyPI-compliant wheel in 30 seconds us
 ```bash
 # 1. Install patchelf and auditwheel
 sudo apt install -y patchelf
-pip install auditwheel        # ofc from a avtive venv
+pip install auditwheel        # ofc from a active venv
 
 # delete old build files
 rm -rf build/ dist/ *.egg-info
