@@ -1,4 +1,4 @@
-# pyradiolib
+<h1 align="center">pyradiolib</h1>
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 

@@ -1,4 +1,4 @@
-# Build Instructions:
+<h1 align="center">Build Instructions</h1>
 
 ## How the Build System Works (CMake + Make + Python)
 
@@ -192,6 +192,7 @@ pip install .
 pip install -e .
 ```
 
+(optionlly pass `--record=install_log.txt`; and later `cat install_log.txt | xargs rm -rf`)<br><br>
 Verify the installation:
 
 ```bash
