@@ -43,7 +43,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="pyradiolib",
-    version="0.1.0",
+    version="1.0.0",
     author="Anirban Giri",
     description="Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi",
     long_description=open("README.md", "r", encoding="utf-8").read() if os.path.exists("README.md") else "",
@@ -51,5 +51,5 @@ setup(
     ext_modules=[CMakeExtension("pyradiolib")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.8",
+    python_requires=">=3.10",
 )
