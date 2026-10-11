@@ -2,9 +2,7 @@
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
-<img src="media/hatv1.0.0.jpg" alt="RPI_schematic" width="80%"/>
-
----
+## <img src="media/hatv1.0.1.png" alt="RPI_schematic" width="80%"/>
 
 ## 1. Architecture
 
@@ -94,7 +92,7 @@ source ./venv/bin/activate
 pip install --no-cache-dir pyradiolib
 ```
 
-_If you wish to build from the source follow this guide: [building&publishing.md](building&publishing.md)_
+_If you wish to build from the source follow this guide: [building_publishing.md](building_publishing.md)_
 
 ## 4. Python Quick Start
 

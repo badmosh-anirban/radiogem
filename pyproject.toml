@@ -25,7 +25,8 @@ keywords = [
     "iot",
     "radio",
     "pybind11",
-    "lgpio"
+    "lgpio",
+    "arduino"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
