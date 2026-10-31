@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Non-blocking / Interrupt-driven LoRa Transmitter Example using pyradiolib.
+Non-blocking / Interrupt-driven LoRa Transmitter Example using radiogem.
 Demonstrates:
   1. Starting transmission without blocking the Python thread (start_transmit)
   2. Waiting for transmission completion via callback (set_packet_sent_action)
@@ -8,14 +8,14 @@ Demonstrates:
 """
 import time
 import sys
-from pyradiolib import SX1262, ERR_NONE, get_status_text
+from radiogem import SX1262, ERR_NONE, get_status_text
 
 transmitted_flag = False
 
 def main():
     global transmitted_flag
     print("=" * 60)
-    print(" pyradiolib - Non-blocking Interrupt Transmitter Example")
+    print(" radiogem - Non-blocking Interrupt Transmitter Example")
     print("=" * 60)
 
     radio = SX1262(

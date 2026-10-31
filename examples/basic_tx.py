@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Basic LoRa Transmitter (TX) Example using pyradiolib on Raspberry Pi.
+Basic LoRa Transmitter (TX) Example using radiogem on Raspberry Pi.
 """
 import time
 import sys
 import argparse
-from pyradiolib import SX1262, ERR_NONE, get_status_text
+from radiogem import SX1262, ERR_NONE, get_status_text
 
 def main():
-    parser = argparse.ArgumentParser(description="pyradiolib SX1262 Transmitter Example")
+    parser = argparse.ArgumentParser(description="radiogem SX1262 Transmitter Example")
     parser.add_argument("--interval", type=float, default=1.0,
                         help="Transmit interval in seconds (default: 1.0s; avoid 2.0s if receiver uses blocking 2.05s timeout)")
     parser.add_argument("--freq", type=float, default=866.5, help="Frequency in MHz (default: 866.5)")
@@ -17,7 +17,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 45)
-    print(" pyradiolib - SX1262 Transmitter Example")
+    print(" radiogem - SX1262 Transmitter Example")
     print(f" Frequency: {args.freq} MHz | TX Power: {args.power} dBm")
     print(f" TX Interval: {args.interval}s")
     print("=" * 45)

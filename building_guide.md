@@ -15,26 +15,26 @@ Understanding how the parts fit together:
        │
        ├──► Target 1: RadioLib (Compiles RadioLib/src/*.cpp into static library)
        │
-       └──► Target 2: pyradiolib (Compiles src/sx1262_wrapper.cpp & src/bindings.cpp)
+       └──► Target 2: radiogem (Compiles src/sx1262_wrapper.cpp & src/bindings.cpp)
                 │
                 ▼ Links with: RadioLib + lgpio
                 │
                 ▼ Generates:
-             pyradiolib.cpython-313-aarch64-linux-gnu.so
+             radiogem.cpython-313-aarch64-linux-gnu.so
 ```
 
-When Python executes `import pyradiolib`:
+When Python executes `import radiogem`:
 
 1. Python loads the `.so` shared library using dynamic linking (`dlopen`).
-2. The PyBind11 initialization function `PYBIND11_MODULE(pyradiolib, m)` registers the classes:
-   - `pyradiolib.SX1262`
+2. The PyBind11 initialization function `PYBIND11_MODULE(radiogem, m)` registers the classes:
+   - `radiogem.SX1262`
    - Status enums (`RADIOLIB_ERR_NONE`, `RADIOLIB_ERR_CHIP_NOT_FOUND`, etc.)
 3. The C++ code directly calls `lgpio` to control SPI (bus 0, CE 0) and GPIO pins (Reset, Busy, DIO1).
 
 ---
 
 - **Option A: Build via CMake (Recommended for Native + Python)**: If you prefer manually running `cmake .. && make`, you can do that and use the "_.so_" file directly.
-- **Option B: Install via pip**: To install pyradiolib directly into your Python environment or virtual environment.
+- **Option B: Install via pip**: To install radiogem directly into your Python environment or virtual environment.
 
 ---
 
@@ -51,8 +51,8 @@ sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
 
 ```bash
 # git clone this repo
-git clone --recursive-submodules https://github.com/badmosh-anirban/pyradiolib
-cd pyradiolib
+git clone --recursive-submodules https://github.com/badmosh-anirban/radiogem
+cd radiogem
 
 # Create build directory
 mkdir -p build && cd build
@@ -60,12 +60,12 @@ mkdir -p build && cd build
 
 # Run CMake pointing to your active Python executable
 # cmake .. -DPYTHON_EXECUTABLE=$(which python) -DCMAKE_BUILD_TYPE=Release
-# Build the pyradiolib shared module
-# make pyradiolib -j$(nproc)
+# Build the radiogem shared module
+# make radiogem -j$(nproc)
 
-# The shared library (e.g. pyradiolib.cpython-313-*.so) is created in build/
+# The shared library (e.g. radiogem.cpython-313-*.so) is created in build/
 # Copy or test it directly:
-# python -c "import pyradiolib; print(dir(pyradiolib))"
+# python -c "import radiogem; print(dir(radiogem))"
 
 # cd ..
 
@@ -77,9 +77,9 @@ make -j4
 This builds two targets:
 
 1. `native_test` — Standalone C++ verification binary (Note: I used this previously while debugging and this is no longer built by default, can only be built with an optional flag, see step 3).
-2. `pyradiolib.so` — Python extension module.
+2. `radiogem.so` — Python extension module.
 
-_Because `pyradiolib` is written in C++ (wrapping RadioLib and `lgpio`), Python cannot run it as plain `.py` text files. It must be compiled into a binary shared object library (`pyradiolib.so`)._
+_Because `radiogem` is written in C++ (wrapping RadioLib and `lgpio`), Python cannot run it as plain `.py` text files. It must be compiled into a binary shared object library (`radiogem.so`)._
 
 > [!IMPORTANT]
 > '--recursive-submodules' flag is required as the RadioLib repo is set as a submodule, if you ignore this flag Git will only clone the parent repository and leave the submodule folders empty.
@@ -150,17 +150,17 @@ Under the hood, `setup.py` automatically:
 1. Calls `cmake` to configure the C++ project.
 2. Compiles `RadioLib`, `PiHal.h`, `sx1262_wrapper.cpp`, and `bindings.cpp`.
 3. Links against `lgpio`.
-4. Installs the resulting `pyradiolib` module directly into your Python environment (`.venv` or system Python).
+4. Installs the resulting `radiogem` module directly into your Python environment (`.venv` or system Python).
 
 Without [`setup.py`](setup.py), after building with CMake, the `.so` file would only live in your `build/` folder, meaning you would have to either:
 
 - Keep all your Python scripts inside `build/`, or
 - Constantly set `export PYTHONPATH=...`
 
-With `pip install .` (via [`setup.py`](setup.py)), `pyradiolib` is installed into Python's `site-packages`, so any script anywhere on the Raspberry Pi can simply run:
+With `pip install .` (via [`setup.py`](setup.py)), `radiogem` is installed into Python's `site-packages`, so any script anywhere on the Raspberry Pi can simply run:
 
 ```python
-from pyradiolib import SX1262
+from radiogem import SX1262
 ```
 
 #### Step 1: Install prerequisites on your Raspberry Pi:
@@ -173,8 +173,8 @@ sudo apt install -y cmake g++ liblgpio-dev python3-dev python3-pip
 #### Step 2: Clone this repo:
 
 ```bash
-git clone --recursive-submodules https://github.com/badmosh-anirban/pyradiolib
-cd pyradiolib
+git clone --recursive-submodules https://github.com/badmosh-anirban/radiogem
+cd radiogem
 ```
 
 #### Step 3: Create a virtual environment in the repo root and build the library
@@ -196,9 +196,9 @@ pip install -e .
 Verify the installation:
 
 ```bash
-python -c "import pyradiolib; radio = pyradiolib.SX1262(); print('pyradiolib installed successfully!')"
+python -c "import radiogem; radio = radiogem.SX1262(); print('radiogem installed successfully!')"
 
 # or
-pip show pyradiolib
+pip show radiogem
 
 ```

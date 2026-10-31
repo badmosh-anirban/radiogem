@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Non-blocking / Interrupt-driven LoRa Receiver Example using pyradiolib.
+Non-blocking / Interrupt-driven LoRa Receiver Example using radiogem.
 Demonstrates:
   1. Callback-based interrupt reception (set_packet_received_action)
   2. Continuous listening mode without blocking timeouts (start_receive)
 """
 import time
 import sys
-from pyradiolib import SX1262, ERR_NONE, get_status_text
+from radiogem import SX1262, ERR_NONE, get_status_text
 
 # Flag to signal that a packet has arrived
 received_flag = False
@@ -15,7 +15,7 @@ received_flag = False
 def main():
     global received_flag
     print("=" * 60)
-    print(" pyradiolib - Non-blocking Interrupt Receiver Example")
+    print(" radiogem - Non-blocking Interrupt Receiver Example")
     print("=" * 60)
 
     radio = SX1262(

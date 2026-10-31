@@ -1,16 +1,16 @@
 ---
-name: pyradiolib
+name: radiogem
 description: >-
-  Comprehensive guide for developing, building, debugging, extending, and using pyradiolib —
+  Comprehensive guide for developing, building, debugging, extending, and using radiogem —
   a Python binding layer that exposes RadioLib's C++ LoRa/LoRaWAN radio implementations on
   Raspberry Pi and embedded Linux using lgpio and pybind11.
 ---
 
-# `pyradiolib`: AI Agent Engineering Guide
+# `radiogem`: AI Agent Engineering Guide
 
-This skill file teaches an AI coding agent how to understand, build, debug, use, and extend **`pyradiolib`**.
+This skill file teaches an AI coding agent how to understand, build, debug, use, and extend **`radiogem`**.
 
-`pyradiolib` provides high-performance Python bindings for **RadioLib** (a widely adopted, battle-tested C++ RF communication library) targeting **Raspberry Pi and embedded Linux** single-board computers (SBCs).
+`radiogem` provides high-performance Python bindings for **RadioLib** (a widely adopted, battle-tested C++ RF communication library) targeting **Raspberry Pi and embedded Linux** single-board computers (SBCs).
 
 ---
 
@@ -19,7 +19,7 @@ This skill file teaches an AI coding agent how to understand, build, debug, use,
 > **CRITICAL RULE FOR AI AGENTS:**
 > **DO NOT REWRITE OR REIMPLEMENT RADIOLIB'S RADIO PROTOCOLS IN PYTHON.**
 >
-> `pyradiolib` is **NOT** a Python rewrite of RadioLib. It is a thin, high-performance C++ binding layer using `pybind11` that wraps RadioLib's existing C++ implementation and official Raspberry Pi Hardware Abstraction Layer (`PiHal`).
+> `radiogem` is **NOT** a Python rewrite of RadioLib. It is a thin, high-performance C++ binding layer using `pybind11` that wraps RadioLib's existing C++ implementation and official Raspberry Pi Hardware Abstraction Layer (`PiHal`).
 >
 > All RF timing, state machines, packet encoding, register maps, frequency synthesizers, and interrupt logic belong in **C++ RadioLib**. Python provides the user-facing application API.
 
@@ -33,7 +33,7 @@ This skill file teaches an AI coding agent how to understand, build, debug, use,
                                           │
                                           ▼
                ┌────────────────────────────────────────────────────────┐
-               │           pyradiolib (pybind11 bindings)               │
+               │           radiogem (pybind11 bindings)                 │
                │  - Exposes SX1262 class, Packet struct, status enums   │
                │  - Releases GIL on blocking operations (TX/RX)         │
                │  - Acquires GIL on interrupt callbacks                 │
@@ -79,8 +79,8 @@ This skill file teaches an AI coding agent how to understand, build, debug, use,
 ## 2. Directory Layout & Key Files
 
 ```text
-radiogem/ (or pyradiolib root)
-├── CMakeLists.txt              # Root build configuration for native_test & pyradiolib (.so)
+radiogem/
+├── CMakeLists.txt              # Root build configuration for native_test & radiogem (.so)
 ├── pyproject.toml              # PEP 517/621 build spec (declares pybind11, cmake, setuptools)
 ├── setup.py                    # Custom setuptools CMakeExtension builder
 ├── MANIFEST.in                 # SDist packager manifest (bundles C++ headers & RadioLib/src)
@@ -108,7 +108,7 @@ radiogem/ (or pyradiolib root)
 
 ## 3. Critical Hardware Realities & Edge Cases
 
-When debugging or writing code for `pyradiolib`, keep these four hardware/OS quirks in mind:
+When debugging or writing code for `radiogem`, keep these four hardware/OS quirks in mind:
 
 ### 1. The Kernel SPI Chip Select (CS / NSS) Trap
 * **The Problem:** On Raspberry Pi, `/dev/spidev0.0` uses GPIO 8 (CE0), and `/dev/spidev0.1` uses GPIO 7 (CE1). When Linux `spidev` transfers SPI data via `lgSpiXfer()`, the Linux kernel automatically asserts and deasserts the hardware Chip Select line.
@@ -133,9 +133,9 @@ When debugging or writing code for `pyradiolib`, keep these four hardware/OS qui
 
 ### 3. GPIO Coexistence with `gpiozero`
 * `gpiozero` uses `lgpio` as its default backend on modern Raspberry Pi OS (Bookworm).
-* `pyradiolib` also uses `lgpio` directly in C++.
+* `radiogem` also uses `lgpio` directly in C++.
 * **Rule:** Two separate libraries cannot claim the *same* physical GPIO pin simultaneously.
-* **Safe Pattern:** Dedicate specific pins to the LoRa module (e.g., NSS=7, DIO1=17, RST=22, BUSY=24) and dedicate other pins to `gpiozero` (e.g., LED=21, Button=20). They will coexist in the same process seamlessly.
+* **Safe Pattern:** Dedicate specific pins to the LoRa module (e.g., NSS=7, DIO1=27, RST=22, BUSY=24) and dedicate other pins to `gpiozero` (e.g., LED=21, Button=20). They will coexist in the same process seamlessly.
 
 ### 4. Releasing and Acquiring the Python GIL
 * Blocking operations (`transmit()`, `receive()`) release the GIL via `py::call_guard<py::gil_scoped_release>()`. This ensures background Python threads, asyncio loops, or web servers remain responsive while the radio is transmitting or awaiting a packet.
@@ -174,12 +174,12 @@ make native_test -j$(nproc)
 ### Stage 2: Python Binding Test
 Test the compiled module directly in Python:
 ```python
-import pyradiolib
-print("pyradiolib status:", pyradiolib.ERR_NONE)
-radio = pyradiolib.SX1262(spi_channel=1, nss=7, dio1=17, reset=22, busy=24)
+import radiogem
+print("radiogem status:", radiogem.ERR_NONE)
+radio = radiogem.SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
 status = radio.begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5)
-print(f"begin() status: {status} ({pyradiolib.get_status_text(status)})")
-assert status == pyradiolib.ERR_NONE, "SX1262 initialization failed!"
+print(f"begin() status: {status} ({radiogem.get_status_text(status)})")
+assert status == radiogem.ERR_NONE, "SX1262 initialization failed!"
 ```
 
 ### Stage 3: RF Link & Packet Verification
@@ -196,7 +196,7 @@ If initialization succeeds but packets are not received:
 
 ## 5. RadioLib Error Codes Lookup Table
 
-All RadioLib status codes are exposed directly as integer constants on the `pyradiolib` module:
+All RadioLib status codes are exposed directly as integer constants on the `radiogem` module:
 
 | Constant | Value | Meaning | Primary Causes & Fixes |
 | :--- | :--- | :--- | :--- |
@@ -216,7 +216,7 @@ All RadioLib status codes are exposed directly as integer constants on the `pyra
 
 ---
 
-## 6. How to Build and Compile `pyradiolib`
+## 6. How to Build and Compile `radiogem`
 
 ### System Requirements (Raspberry Pi / Linux)
 ```bash
@@ -228,8 +228,8 @@ sudo apt install -y build-essential cmake python3-dev liblgpio-dev python3-lgpio
 ```bash
 mkdir -p build && cd build
 cmake .. -DPYTHON_EXECUTABLE=$(which python3) -DCMAKE_BUILD_TYPE=Release
-make pyradiolib -j$(nproc)
-# Creates pyradiolib.cpython-*.so in build/
+make radiogem -j$(nproc)
+# Creates radiogem.cpython-*.so in build/
 ```
 
 ### B. Python Package Local Install (`pip`)
@@ -259,16 +259,16 @@ twine check dist/*
 
 ### 1. Initialization and Context Management
 ```python
-import pyradiolib
+import radiogem
 
 # Always use context manager or explicit close() to ensure GPIOs are freed on exit:
-with pyradiolib.SX1262(
+with radiogem.SX1262(
     spi_channel=1,      # SPI0 CE1 (/dev/spidev0.1)
     spi_speed=2000000,  # 2 MHz
     spi_device=0,       # SPI bus 0
     gpio_device=0,      # /dev/gpiochip0
     nss=7,              # GPIO 7
-    dio1=17,            # GPIO 17 (Interrupt)
+    dio1=27,            # GPIO 27 (Interrupt)
     reset=22,           # GPIO 22
     busy=24             # GPIO 24
 ) as radio:
@@ -283,15 +283,15 @@ with pyradiolib.SX1262(
         tcxo_voltage=1.6,         # 1.6V TCXO (0.0 for crystal)
         use_regulator_ldo=False   # Internal DC-DC converter
     )
-    if status != pyradiolib.ERR_NONE:
-        raise RuntimeError(f"Radio init failed: {pyradiolib.get_status_text(status)}")
+    if status != radiogem.ERR_NONE:
+        raise RuntimeError(f"Radio init failed: {radiogem.get_status_text(status)}")
 ```
 
 ### 2. Blocking Transmit and Receive
 ```python
 # Transmit string or bytes (releases GIL during transmission)
 tx_status = radio.transmit("Hello from Raspberry Pi")
-if tx_status == pyradiolib.ERR_NONE:
+if tx_status == radiogem.ERR_NONE:
     print("Transmit success!")
 
 # Receive with timeout in milliseconds (releases GIL while awaiting packet)
@@ -333,7 +333,7 @@ finally:
 
 ---
 
-## 8. Step-by-Step Guide to Extending `pyradiolib`
+## 8. Step-by-Step Guide to Extending `radiogem`
 
 When asked to add a new feature (e.g., FSK modulation, SX1268, CAD, or packet RSSI polling):
 
@@ -369,6 +369,6 @@ When asked to add a new feature (e.g., FSK modulation, SX1268, CAD, or packet RS
 
 - [ ] **NEVER duplicate protocol logic:** Do not write bit-packing, Hamming coding, CRC checks, or SPI byte sequences in Python. RadioLib already does this in C++.
 - [ ] **NEVER leave GPIO pins open on crash:** Always expose and use `close()` or `__exit__()` to invoke `hal->term()` and close file descriptors in `lgpio`.
-- [ ] **NEVER hard-code hardware pin numbers:** Always provide constructor arguments with sensible defaults (`spi_channel=1`, `nss=7`, `dio1=17`, `reset=22`, `busy=24`).
+- [ ] **NEVER hard-code hardware pin numbers:** Always provide constructor arguments with sensible defaults (`spi_channel=1`, `nss=7`, `dio1=27`, `reset=22`, `busy=24`).
 - [ ] **NEVER break `MANIFEST.in`:** If adding new C++ headers or files, ensure `MANIFEST.in` includes them so `pip install` from source distribution packages doesn't break on user machines.
-- [ ] **NEVER mix GPIO pins with other libraries:** Ensure `gpiozero` and `pyradiolib` use strictly disjoint sets of GPIO numbers.
+- [ ] **NEVER mix GPIO pins with other libraries:** Ensure `gpiozero` and `radiogem` use strictly disjoint sets of GPIO numbers.

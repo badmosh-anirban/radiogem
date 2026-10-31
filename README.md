@@ -1,4 +1,4 @@
-<h1 align="center">pyradiolib</h1>
+<h1 align="center">radiogem</h1>
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
@@ -10,7 +10,7 @@ Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/Ra
 Python Application (your script or daemon)
         │
         ▼
-    pyradiolib  (Python module)
+    radiogem  (Python module)
         │
   pybind11 layer  (bindings.cpp)
         │
@@ -89,7 +89,7 @@ sudo apt install -y liblgpio-dev python3-dev python3-pip python3-gpiozero
 python3 -m venv .venv --system-site-packages
 source .venv/bin/activate
 
-pip install --no-cache-dir pyradiolib
+pip install --no-cache-dir radiogem
 ```
 
 _If you wish to build from the source follow this guide: [building_guide.md](building_guide.md)_
@@ -99,7 +99,7 @@ _If you wish to build from the source follow this guide: [building_guide.md](bui
 ### Basic Transmitter (TX)
 
 ```python
-from pyradiolib import SX1262, ERR_NONE
+from radiogem import SX1262, ERR_NONE
 
 # 1. Initialize radio with pin mapping
 radio = SX1262(
@@ -133,7 +133,7 @@ if status == ERR_NONE:
 ### Basic Receiver (RX)
 
 ```python
-from pyradiolib import SX1262, ERR_NONE
+from radiogem import SX1262, ERR_NONE
 
 radio = SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
 radio.begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, power=10)
@@ -180,7 +180,7 @@ The `examples/` directory contains complete runnable examples:
 
 Make sure you are running the following examples after activating your virtual environment.
 
-From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`, for the respective virtual environment):
+From the repository root (make sure `radiogem` is installed or in `PYTHONPATH`, for the respective virtual environment):
 
 ```bash
 # If running directly after building(by cmake & make) in build/:
@@ -360,7 +360,7 @@ Returned by `radio.receive()`:
    - Uses the existing, tested [`RadioLib`](RadioLib) C++ library and [`hal/PiHal.h`](hal/PiHal.h) (`lgpio`).
    - Radio registers, LoRa packet framing, and interrupt handling remain in native C++.
 
-2. **Pythonic API (`pyradiolib`)**:
+2. **Pythonic API (`radiogem`)**:
 
    - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=27, reset=22, busy=24`).
    - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm**.

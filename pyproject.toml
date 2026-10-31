@@ -8,7 +8,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyradiolib"
+name = "radiogem"
 version = "1.0.0"
 description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
 readme = "README.md"
@@ -44,7 +44,7 @@ classifiers = [
     "Topic :: Software Development :: Embedded Systems"
 ]
 [project.urls]
-Homepage= "https://github.com/badmosh-anirban/pyradiolib"
+Homepage = "https://github.com/badmosh-anirban/radiogem"
 
 [project.optional-dependencies]
 dev = [

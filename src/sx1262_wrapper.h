@@ -1,5 +1,5 @@
-#ifndef PYRADIOLIB_SX1262_WRAPPER_H
-#define PYRADIOLIB_SX1262_WRAPPER_H
+#ifndef RADIOGEM_SX1262_WRAPPER_H
+#define RADIOGEM_SX1262_WRAPPER_H
 
 #include <cstdint>
 #include <cstddef>
@@ -201,4 +201,4 @@ private:
     std::function<void()> py_packet_sent_cb = nullptr;
 };
 
-#endif // PYRADIOLIB_SX1262_WRAPPER_H
+#endif // RADIOGEM_SX1262_WRAPPER_H

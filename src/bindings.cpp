@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pyradiolib, m) {
+PYBIND11_MODULE(radiogem, m) {
     m.doc() = "Python bindings for RadioLib SX1262 on Raspberry Pi";
 
     // RadioLib Status Codes

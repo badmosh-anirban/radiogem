@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Example demonstrating simultaneous coexistence of pyradiolib (RadioLib + lgpio)
+Example demonstrating simultaneous coexistence of radiogem (RadioLib + lgpio)
 and gpiozero on separate GPIO pins without hardware or driver conflicts.
 
 Pin ownership layout:
@@ -24,11 +24,11 @@ except ImportError:
     print("  pip install gpiozero")
     print("Proceeding with simulated GPIO components...\n")
 
-from pyradiolib import SX1262, ERR_NONE, get_status_text
+from radiogem import SX1262, ERR_NONE, get_status_text
 
 def main():
     print("=" * 60)
-    print(" pyradiolib + gpiozero Coexistence Demo")
+    print(" radiogem + gpiozero Coexistence Demo")
     print("=" * 60)
 
     # 1. Initialize gpiozero peripherals on independent GPIO pins
@@ -41,8 +41,8 @@ def main():
         print(f"[gpiozero] Hardware not initialized ({e}); running in radio-only mode.")
         has_gpiozero = False
 
-    # 2. Initialize pyradiolib radio with dedicated SX1262 pins
-    print("[pyradiolib] Initializing SX1262 on SPI1, NSS=7, DIO1=27, RST=22, BUSY=24...")
+    # 2. Initialize radiogem radio with dedicated SX1262 pins
+    print("[radiogem] Initializing SX1262 on SPI1, NSS=7, DIO1=27, RST=22, BUSY=24...")
     radio = SX1262(
         spi_channel=1,
         nss=7,
@@ -60,12 +60,12 @@ def main():
     )
 
     if status != ERR_NONE:
-        print(f"[pyradiolib] Init failed: {get_status_text(status)}")
+        print(f"[radiogem] Init failed: {get_status_text(status)}")
         sys.exit(1)
 
-    print("[pyradiolib] Radio initialized successfully!")
+    print("[radiogem] Radio initialized successfully!")
     print("\nDemonstrating non-conflicting concurrent operation:")
-    print("- Blinking gpiozero LED while transmitting via pyradiolib...")
+    print("- Blinking gpiozero LED while transmitting via radiogem...")
 
     try:
         for i in range(5):
@@ -73,7 +73,7 @@ def main():
             if has_gpiozero:
                 led.on()
 
-            # pyradiolib action
+            # radiogem action
             msg = f"Coexistence packet #{i}"
             print(f"  -> Transmitting '{msg}' (LED ON)... ", end="", flush=True)
             st = radio.transmit(msg)
@@ -87,7 +87,7 @@ def main():
 
             time.sleep(1.0)
 
-        print("\nSUCCESS: Both pyradiolib (PiHal) and gpiozero operated harmoniously!")
+        print("\nSUCCESS: Both radiogem (PiHal) and gpiozero operated harmoniously!")
 
     except KeyboardInterrupt:
         print("\nStopping...")

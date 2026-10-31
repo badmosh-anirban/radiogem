@@ -37,12 +37,12 @@ class CMakeBuild(build_ext):
             ["cmake", ext.sourcedir] + cmake_args, cwd=build_temp
         )
         subprocess.check_call(
-            ["cmake", "--build", ".", "--target", "pyradiolib"] + build_args,
+            ["cmake", "--build", ".", "--target", "radiogem"] + build_args,
             cwd=build_temp,
         )
 
 setup(
-    ext_modules=[CMakeExtension("pyradiolib")],
+    ext_modules=[CMakeExtension("radiogem")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
 )

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Bidirectional LoRa TX / RX Utility using pyradiolib on Raspberry Pi.
+Bidirectional LoRa TX / RX Utility using radiogem on Raspberry Pi.
 """
 import argparse
 import time
 import sys
-from pyradiolib import SX1262, ERR_NONE, ERR_RX_TIMEOUT, get_status_text
+from radiogem import SX1262, ERR_NONE, ERR_RX_TIMEOUT, get_status_text
 
 def main():
     parser = argparse.ArgumentParser(description="RadioLib SX1262 LoRa Demo on Raspberry Pi")
@@ -24,7 +24,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 55)
-    print(" pyradiolib SX1262 Interactive Utility")
+    print(" radiogem SX1262 Interactive Utility")
     print(f" Mode: {args.mode.upper()} | Freq: {args.freq} MHz | SF{args.sf} | BW {args.bw} kHz")
     print(f" Pins: SPI_CH={args.spi_ch} NSS={args.nss} DIO1={args.dio1} RST={args.rst} BUSY={args.busy}")
     print("=" * 55)
