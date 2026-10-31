@@ -5,7 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Add RadioLib submodule/source
+# Check and add RadioLib submodule/source
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/CMakeLists.txt")
+    message(FATAL_ERROR "RadioLib submodule is missing! Please run: git submodule update --init --recursive")
+endif()
 add_subdirectory(RadioLib)
 
 # Common include directories

@@ -2,7 +2,7 @@
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
-## <img src="media/hatv1.0.1.png" alt="RPI_schematic" width="80%"/>
+## <img src="media/hatv1.0.1.png" alt="Raspberry Pi HAT PCB" width="80%"/>
 
 ## 1. Architecture
 
@@ -87,7 +87,7 @@ sudo apt install -y liblgpio-dev python3-dev python3-pip python3-gpiozero
 
 ```bash
 python3 -m venv .venv --system-site-packages
-source ./venv/bin/activate
+source .venv/bin/activate
 
 pip install --no-cache-dir pyradiolib
 ```
@@ -316,7 +316,7 @@ Returned by `radio.receive()`:
 ```
 ├── .gitignore
 ├── .gitmodules
-├── building&publishing.md      # Building from source & publishing details
+├── building_publishing.md       # Building from source & publishing details
 ├── CMakeLists.txt              # Unified build system (native C++ & Python module)
 ├── LICENSE
 ├── MANIFEST.in                 # Required by PyPI
@@ -325,7 +325,7 @@ Returned by `radio.receive()`:
 ├── setup.py                    # pip install . support with CMakeExtension
 │
 ├── hal/
-│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifiactions
+│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifications
 │
 ├── src/
 │   ├── sx1262_wrapper.h        # C++ wrapper header & Packet definition
@@ -346,7 +346,7 @@ Returned by `radio.receive()`:
 │
 ├── media/                      # Images, videos, etc.
 │
-├── agents/                     # AI skill
+├── .agents/                    # AI skill
 │
 └── RadioLib/                   # RadioLib C++ submodule
 ```
@@ -362,7 +362,7 @@ Returned by `radio.receive()`:
 
 2. **Pythonic API (`pyradiolib`)**:
 
-   - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=17, reset=22, busy=24`).
+   - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=27, reset=22, busy=24`).
    - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm**.
    - `transmit()` seamlessly accepts both Python `str` and binary `bytes`.
    - `receive(timeout_ms=5000)` returns a `Packet` object (`packet.payload`, `packet.text`, `packet.rssi`, `packet.snr`) or `None` on timeout.

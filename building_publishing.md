@@ -121,7 +121,7 @@ _or you may even skip this step._
 ```bash
 # Create and activate a virtual environment in the repo root:
 python3 -m venv .venv --system-site-packages
-source ./venv/bin/activate
+source .venv/bin/activate
 
 # From repository root with PYTHONPATH pointing to build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
@@ -182,7 +182,7 @@ cd pyradiolib
 ```bash
 # Create and activate a virtual environment :
 python3 -m venv .venv --system-site-packages
-source ./venv/bin/activate
+source .venv/bin/activate
 
 # Install directly
 pip install .
