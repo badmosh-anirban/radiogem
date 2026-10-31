@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 3.18)
-project(pyradiolib LANGUAGES CXX)
+project(radiogem LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Add RadioLib submodule/source
+# Check and add RadioLib submodule/source
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/CMakeLists.txt")
+    message(FATAL_ERROR "RadioLib submodule is missing! Please run: git submodule update --init --recursive")
+endif()
 add_subdirectory(RadioLib)
 
 # Common include directories
-set(PYRADIOLIB_INCLUDES
+set(RADIOGEM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/hal
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/src
@@ -29,13 +32,13 @@ option(BUILD_NATIVE_TEST "Build native C++ standalone verification executable" O
 if(BUILD_NATIVE_TEST OR (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp" AND NOT DEFINED SKBUILD))
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
         add_executable(native_test examples/native_test.cpp)
-        target_include_directories(native_test PRIVATE ${PYRADIOLIB_INCLUDES})
+        target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
         target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
     endif()
 endif()
 
 # ==============================================================================
-# Target 2: pyradiolib Python Extension Module (pybind11)
+# Target 2: radiogem Python Extension Module (pybind11)
 # ==============================================================================
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
@@ -68,15 +71,15 @@ if(NOT pybind11_FOUND)
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-pybind11_add_module(pyradiolib
+pybind11_add_module(radiogem
     src/bindings.cpp
     src/sx1262_wrapper.cpp
 )
 
-target_include_directories(pyradiolib PRIVATE ${PYRADIOLIB_INCLUDES})
-target_link_libraries(pyradiolib PRIVATE RadioLib ${LGPIO_LIB})
+target_include_directories(radiogem PRIVATE ${RADIOGEM_INCLUDES})
+target_link_libraries(radiogem PRIVATE RadioLib ${LGPIO_LIB})
 
 # Copy built extension module to root or examples for convenient testing
-set_target_properties(pyradiolib PROPERTIES
-    OUTPUT_NAME "pyradiolib"
+set_target_properties(radiogem PROPERTIES
+    OUTPUT_NAME "radiogem"
 )

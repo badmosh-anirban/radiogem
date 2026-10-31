@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Example demonstrating changing radio and LoRa modulation settings at runtime
-using pyradiolib (analogous to SX126x_Settings.ino in C++).
+using radiogem (analogous to SX126x_Settings.ino in C++).
 """
 import sys
-from pyradiolib import (
+from radiogem import (
     SX1262,
     ERR_NONE,
     get_status_text,
@@ -24,7 +24,7 @@ def check_status(action_name, status):
 
 def main():
     print("=" * 60)
-    print(" pyradiolib - Runtime Settings Example")
+    print(" radiogem - Runtime Settings Example")
     print("=" * 60)
 
     radio = SX1262(

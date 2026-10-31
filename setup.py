@@ -37,19 +37,12 @@ class CMakeBuild(build_ext):
             ["cmake", ext.sourcedir] + cmake_args, cwd=build_temp
         )
         subprocess.check_call(
-            ["cmake", "--build", ".", "--target", "pyradiolib"] + build_args,
+            ["cmake", "--build", ".", "--target", "radiogem"] + build_args,
             cwd=build_temp,
         )
 
 setup(
-    name="pyradiolib",
-    version="0.1.0",
-    author="Anirban Giri",
-    description="Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi",
-    long_description=open("README.md", "r", encoding="utf-8").read() if os.path.exists("README.md") else "",
-    long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension("pyradiolib")],
+    ext_modules=[CMakeExtension("radiogem")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.8",
 )

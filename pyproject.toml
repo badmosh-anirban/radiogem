@@ -1,39 +1,39 @@
 [build-system]
 requires = [
-    "setuptools>=80.8.0",
+    "setuptools>=64.0.0",
     "wheel",
-    "cmake>=4.0.0",
-    "pybind11>=3.0.0"
+    "cmake>=3.18",
+    "pybind11>=2.13.0"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyradiolib"
-version = "0.1.0"
+name = "radiogem"
+version = "1.0.0"
 description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license ="MIT"
 authors = [
     { name = "Anirban Giri" }
 ]
 keywords = [
-    "lora",
+    "LoRa",
     "radiolib",
     "sx1262",
     "raspberry-pi",
     "iot",
     "radio",
     "pybind11",
-    "lgpio"
+    "lgpio",
+    "arduino"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Education",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -43,6 +43,8 @@ classifiers = [
     "Topic :: Communications :: Ham Radio",
     "Topic :: Software Development :: Embedded Systems"
 ]
+[project.urls]
+Homepage = "https://github.com/badmosh-anirban/radiogem"
 
 [project.optional-dependencies]
 dev = [

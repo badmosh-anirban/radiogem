@@ -1,5 +1,4 @@
 # Note: This directory is for storing notes and other information. It is not a part of the project.
 
 - myChangeLog.md: Most of this library is written by AI. So this file is a compilation of what AI gave as response and what I added to it. It thus is the change log of the project.
-
-
+- radiogem is the official name of the library (previously referred to as pyradiolib during initial prototyping).

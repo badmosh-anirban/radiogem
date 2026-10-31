@@ -1,11 +1,8 @@
-# pyradiolib
+<h1 align="center">radiogem</h1>
 
 Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
-{replace}
-Picture/ demo video
-
----
+## <img src="media/hatv1.0.1.png" alt="Raspberry Pi HAT PCB" width="80%"/>
 
 ## 1. Architecture
 
@@ -13,7 +10,7 @@ Picture/ demo video
 Python Application (your script or daemon)
         │
         ▼
-    pyradiolib  (Python module)
+    radiogem  (Python module)
         │
   pybind11 layer  (bindings.cpp)
         │
@@ -63,10 +60,9 @@ Key principles:
 
 _All pin assignments are completely configurable when creating the `SX1262` object._
 
-I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not affiliated)
+I'm using a **Raspberry Pi zero 2W** & [Wio-SX1262 for XIAO](https://www.seeedstudio.com/Wio-SX1262-for-XIAO-p-6379.html) (not sponsored, not affiliated)
 
-{replace}
-schematic
+<img src="media/schematicv1.0.0.png" alt="RPI_schematic" width="80%"/>
 
 ## 3. Raspberry Pi Prerequisites
 
@@ -91,19 +87,19 @@ sudo apt install -y liblgpio-dev python3-dev python3-pip python3-gpiozero
 
 ```bash
 python3 -m venv .venv --system-site-packages
-source ./venv/bin/activate
+source .venv/bin/activate
 
-pip install pyradiolib
+pip install --no-cache-dir radiogem
 ```
 
-_If you wish to build from the source follow this guide: [building&publishing.md](building&publishing.md)_
+_If you wish to build from the source follow this guide: [building_guide.md](building_guide.md)_
 
 ## 4. Python Quick Start
 
 ### Basic Transmitter (TX)
 
 ```python
-from pyradiolib import SX1262, ERR_NONE
+from radiogem import SX1262, ERR_NONE
 
 # 1. Initialize radio with pin mapping
 radio = SX1262(
@@ -137,7 +133,7 @@ if status == ERR_NONE:
 ### Basic Receiver (RX)
 
 ```python
-from pyradiolib import SX1262, ERR_NONE
+from radiogem import SX1262, ERR_NONE
 
 radio = SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
 radio.begin(frequency=866.5, bandwidth=125.0, spreading_factor=7, coding_rate=5, power=10)
@@ -184,10 +180,10 @@ The `examples/` directory contains complete runnable examples:
 
 Make sure you are running the following examples after activating your virtual environment.
 
-From the repository root (make sure `pyradiolib` is installed or in `PYTHONPATH`, for the respective virtual environment):
+From the repository root (make sure `radiogem` is installed or in `PYTHONPATH`, for the respective virtual environment):
 
 ```bash
-# If running directly after building in build/:
+# If running directly after building(by cmake & make) in build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
 
 # Run blocking TX:
@@ -318,15 +314,18 @@ Returned by `radio.receive()`:
 ### Project Architecture & Layout
 
 ```
-
+├── .gitignore
+├── .gitmodules
+├── building_guide.md       # Building from source details
 ├── CMakeLists.txt              # Unified build system (native C++ & Python module)
-├── setup.py                    # pip install . support with CMakeExtension
+├── LICENSE
+├── MANIFEST.in                 # Required by PyPI
 ├── pyproject.toml              # Modern Python packaging configuration
 ├── README.md                   # Full documentation, wiring guide, and API reference
-├── .gitignore
+├── setup.py                    # pip install . support with CMakeExtension
 │
 ├── hal/
-│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifiactions
+│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifications
 │
 ├── src/
 │   ├── sx1262_wrapper.h        # C++ wrapper header & Packet definition
@@ -334,11 +333,20 @@ Returned by `radio.receive()`:
 │   └── bindings.cpp            # pybind11 module bindings with GIL release
 │
 ├── examples/
-│   ├── native_test.cpp         # Stage 1: Standalone C++ hardware verification
-│   ├── basic_tx.py             # Stage 4: Python continuous transmitter
-│   ├── basic_rx.py             # Stage 5: Python continuous receiver
-│   ├── basic_tx_rx.py          # Interactive bidirectional CLI utility
-│   └── gpiozero_coexist.py     # Stage 6: gpiozero coexistence demo
+│   ├── basic_tx.py             # Continuous blocking transmitter
+│   ├── basic_rx.py             # Continuous blocking receiver
+│   ├── interrupt_tx.py         # Non-blocking / Interrupt transmitter
+│   ├── interrupt_rx.py         # Non-blocking / Interrupt receiver
+│   ├── basic_tx_rx.py          # Interactive CLI tool with configurable RF parameters
+│   ├── gpiozero_coexist.py     # gpiozero coexistence demo
+│   ├── change_settings.py      # Runtime settings demo
+│   └── native_test.cpp         # Standalone C++ hardware verification
+│
+├── others/                     # Ignore this, not a part of the project
+│
+├── media/                      # Images, videos, etc.
+│
+├── .agents/                    # AI skill
 │
 └── RadioLib/                   # RadioLib C++ submodule
 ```
@@ -352,9 +360,9 @@ Returned by `radio.receive()`:
    - Uses the existing, tested [`RadioLib`](RadioLib) C++ library and [`hal/PiHal.h`](hal/PiHal.h) (`lgpio`).
    - Radio registers, LoRa packet framing, and interrupt handling remain in native C++.
 
-2. **Pythonic API (`pyradiolib`)**:
+2. **Pythonic API (`radiogem`)**:
 
-   - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=17, reset=22, busy=24`).
+   - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=27, reset=22, busy=24`).
    - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm**.
    - `transmit()` seamlessly accepts both Python `str` and binary `bytes`.
    - `receive(timeout_ms=5000)` returns a `Packet` object (`packet.payload`, `packet.text`, `packet.rssi`, `packet.snr`) or `None` on timeout.

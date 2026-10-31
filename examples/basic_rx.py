@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Basic LoRa Receiver (RX) Example using pyradiolib on Raspberry Pi.
+Basic LoRa Receiver (RX) Example using radiogem on Raspberry Pi.
 """
 import sys
-from pyradiolib import SX1262, ERR_NONE, ERR_RX_TIMEOUT, get_status_text
+from radiogem import SX1262, ERR_NONE, ERR_RX_TIMEOUT, get_status_text
 
 def main():
     print("=" * 45)
-    print(" pyradiolib - SX1262 Receiver Example")
+    print(" radiogem - SX1262 Receiver Example")
     print("=" * 45)
 
     # 1. Create the radio instance
