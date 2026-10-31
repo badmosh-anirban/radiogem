@@ -84,7 +84,7 @@ radiogem/ (or pyradiolib root)
 ├── pyproject.toml              # PEP 517/621 build spec (declares pybind11, cmake, setuptools)
 ├── setup.py                    # Custom setuptools CMakeExtension builder
 ├── MANIFEST.in                 # SDist packager manifest (bundles C++ headers & RadioLib/src)
-├── PUBLISHING_GUIDE.md         # Guide for PyPI compilation and release
+├── building_guide.md           # Guide for building from source (CMake & pip)
 ├── LICENSE                     # MIT License
 ├── RadioLib/                   # Vendored upstream RadioLib C++ source
 │   ├── CMakeLists.txt          # RadioLib static library build target

@@ -92,7 +92,7 @@ source .venv/bin/activate
 pip install --no-cache-dir pyradiolib
 ```
 
-_If you wish to build from the source follow this guide: [building_publishing.md](building_publishing.md)_
+_If you wish to build from the source follow this guide: [building_guide.md](building_guide.md)_
 
 ## 4. Python Quick Start
 
@@ -316,7 +316,7 @@ Returned by `radio.receive()`:
 ```
 ├── .gitignore
 ├── .gitmodules
-├── building_publishing.md       # Building from source & publishing details
+├── building_guide.md       # Building from source details
 ├── CMakeLists.txt              # Unified build system (native C++ & Python module)
 ├── LICENSE
 ├── MANIFEST.in                 # Required by PyPI
