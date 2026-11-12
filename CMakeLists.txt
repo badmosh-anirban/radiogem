@@ -31,12 +31,17 @@ endif()
 # ==============================================================================
 option(BUILD_NATIVE_TEST "Build native C++ standalone verification executable" OFF)
 
-if(BUILD_NATIVE_TEST OR (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp" AND NOT DEFINED SKBUILD))
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
-        add_executable(native_test examples/native_test.cpp)
-        target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
-        target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
-    endif()
+set(NATIVE_TEST_SRC "")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+endif()
+
+if((BUILD_NATIVE_TEST OR NOT DEFINED SKBUILD) AND NATIVE_TEST_SRC)
+    add_executable(native_test ${NATIVE_TEST_SRC})
+    target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
+    target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
 endif()
 
 # ==============================================================================

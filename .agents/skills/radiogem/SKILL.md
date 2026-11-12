@@ -109,12 +109,20 @@ radiogem/
 │       ├── sx126x_bindings.h   # pybind11 SX126x module definitions
 │       └── sx126x_bindings.cpp
 └── examples/
-    ├── basic_tx.py             # Simple blocking transmit example
-    ├── basic_rx.py             # Simple blocking receive example
-    ├── interrupt_rx.py         # Asynchronous non-blocking interrupt RX example
-    ├── change_settings.py      # Dynamic RF configuration (frequency, SF, power, BW)
-    ├── gpiozero_coexist.py     # Safe coexistence pattern with gpiozero
-    └── native_test.cpp         # Pure C++ standalone diagnostic tool (Stage 1 test)
+    ├── sx1261/                 # SX1261 examples (-17 to +15 dBm)
+    │   ├── basic_tx.py         # Simple blocking transmit example
+    │   └── basic_rx.py         # Simple blocking receive example
+    ├── sx1262/                 # SX1262 examples (-9 to +22 dBm)
+    │   ├── basic_tx.py         # Simple blocking transmit example
+    │   ├── basic_rx.py         # Simple blocking receive example
+    │   ├── interrupt_tx.py     # Asynchronous non-blocking interrupt TX example
+    │   ├── interrupt_rx.py     # Asynchronous non-blocking interrupt RX example
+    │   ├── change_settings.py  # Dynamic RF configuration (frequency, SF, power, BW)
+    │   ├── gpiozero_coexist.py # Safe coexistence pattern with gpiozero
+    │   └── native_test.cpp     # Pure C++ standalone diagnostic tool (Stage 1 test)
+    └── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+        ├── basic_tx.py         # Simple blocking transmit example
+        └── basic_rx.py         # Simple blocking receive example
 ```
 
 ---

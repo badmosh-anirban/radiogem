@@ -163,48 +163,57 @@ with SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24) as radio:
 
 ## 5. Examples
 
-The `examples/` directory contains complete runnable examples:
+The `examples/` directory is organized into separate folders for each supported LoRa module:
 
-| Script                                                         | Purpose                                                                    |
-| :------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| [`examples/native_test.cpp`](examples/native_test.cpp)         | Native C++ hardware verification executable                                |
-| [`examples/basic_tx.py`](examples/basic_tx.py)                 | Blocking LoRa transmitter                                                  |
-| [`examples/basic_rx.py`](examples/basic_rx.py)                 | Blocking LoRa receiver                                                     |
-| [`examples/interrupt_tx.py`](examples/interrupt_tx.py)         | **Non-blocking / Interrupt transmitter** (`start_transmit`, callbacks)     |
-| [`examples/interrupt_rx.py`](examples/interrupt_rx.py)         | **Non-blocking / Interrupt receiver** (continuous listen, callbacks)       |
-| [`examples/change_settings.py`](examples/change_settings.py)   | **Runtime settings demo** (frequency, BW, SF, sync word, power, CRC, TCXO) |
-| [`examples/basic_tx_rx.py`](examples/basic_tx_rx.py)           | Interactive CLI tool with configurable RF parameters                       |
-| [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals                       |
+#### **SX1262 Examples (`examples/sx1262/`)**
+| Script | Purpose |
+| :--- | :--- |
+| [`examples/sx1262/native_test.cpp`](examples/sx1262/native_test.cpp) | Native C++ hardware verification executable |
+| [`examples/sx1262/basic_tx.py`](examples/sx1262/basic_tx.py) | Blocking LoRa transmitter |
+| [`examples/sx1262/basic_rx.py`](examples/sx1262/basic_rx.py) | Blocking LoRa receiver |
+| [`examples/sx1262/interrupt_tx.py`](examples/sx1262/interrupt_tx.py) | **Non-blocking / Interrupt transmitter** (`start_transmit`, callbacks) |
+| [`examples/sx1262/interrupt_rx.py`](examples/sx1262/interrupt_rx.py) | **Non-blocking / Interrupt receiver** (continuous listen, callbacks) |
+| [`examples/sx1262/change_settings.py`](examples/sx1262/change_settings.py) | **Runtime settings demo** (frequency, BW, SF, sync word, power, CRC, TCXO) |
+| [`examples/sx1262/basic_tx_rx.py`](examples/sx1262/basic_tx_rx.py) | Interactive CLI tool with configurable RF parameters |
+| [`examples/sx1262/gpiozero_coexist.py`](examples/sx1262/gpiozero_coexist.py) | Demonstrates coexistence with `gpiozero` peripherals |
+
+#### **SX1261 Examples (`examples/sx1261/`)**
+| Script | Purpose |
+| :--- | :--- |
+| [`examples/sx1261/basic_tx.py`](examples/sx1261/basic_tx.py) | Blocking LoRa transmitter (-17 to +15 dBm) |
+| [`examples/sx1261/basic_rx.py`](examples/sx1261/basic_rx.py) | Blocking LoRa receiver |
+
+#### **SX1268 Examples (`examples/sx1268/`)**
+| Script | Purpose |
+| :--- | :--- |
+| [`examples/sx1268/basic_tx.py`](examples/sx1268/basic_tx.py) | Blocking LoRa transmitter (410-810 MHz, default: 434 MHz) |
+| [`examples/sx1268/basic_rx.py`](examples/sx1268/basic_rx.py) | Blocking LoRa receiver |
 
 ### Running the examples:
 
 Make sure you are running the following examples after activating your virtual environment.
 
-From the repository root (make sure `radiogem` is installed or in `PYTHONPATH`, for the respective virtual environment):
+From the repository root (make sure `radiogem` is installed or in `PYTHONPATH`):
 
 ```bash
-# If running directly after building(by cmake & make) in build/:
+# If running directly after building in build/:
 export PYTHONPATH=$PYTHONPATH:$(pwd)/build
 
-# Run blocking TX:
-python3 examples/basic_tx.py
+# Run SX1262 examples:
+python3 examples/sx1262/basic_tx.py
+python3 examples/sx1262/basic_rx.py
+python3 examples/sx1262/interrupt_tx.py
+python3 examples/sx1262/interrupt_rx.py
+python3 examples/sx1262/change_settings.py
+python3 examples/sx1262/gpiozero_coexist.py
 
-# Run blocking RX:
-python3 examples/basic_rx.py
+# Run SX1261 examples:
+python3 examples/sx1261/basic_tx.py
+python3 examples/sx1261/basic_rx.py
 
-
-# Run non-blocking interrupt TX:
-python3 examples/interrupt_tx.py
-
-# Run non-blocking interrupt RX (continuous mode, no timeouts):
-python3 examples/interrupt_rx.py
-
-
-# Run runtime settings demo:
-python3 examples/change_settings.py
-
-# Run with gpiozero:
-python3 examples/gpiozero_coexist.py
+# Run SX1268 examples:
+python3 examples/sx1268/basic_tx.py
+python3 examples/sx1268/basic_rx.py
 ```
 
 ---
@@ -347,16 +356,21 @@ Returned by `radio.receive()`:
 │       └── sx126x_bindings.cpp
 │
 ├── examples/
-│   ├── basic_tx.py             # Continuous blocking transmitter (SX1262)
-│   ├── basic_rx.py             # Continuous blocking receiver (SX1262)
-│   ├── sx1261_basic_tx.py      # SX1261 transmitter example
-│   ├── sx1268_basic_tx.py      # SX1268 transmitter example
-│   ├── interrupt_tx.py         # Non-blocking / Interrupt transmitter
-│   ├── interrupt_rx.py         # Non-blocking / Interrupt receiver
-│   ├── basic_tx_rx.py          # Interactive CLI tool with configurable RF parameters
-│   ├── gpiozero_coexist.py     # gpiozero coexistence demo
-│   ├── change_settings.py      # Runtime settings demo
-│   └── native_test.cpp         # Standalone C++ hardware verification
+│   ├── sx1261/                 # SX1261 examples (-17 to +15 dBm)
+│   │   ├── basic_tx.py         # Blocking transmitter
+│   │   └── basic_rx.py         # Blocking receiver
+│   ├── sx1262/                 # SX1262 examples (-9 to +22 dBm)
+│   │   ├── basic_tx.py         # Continuous blocking transmitter
+│   │   ├── basic_rx.py         # Continuous blocking receiver
+│   │   ├── interrupt_tx.py     # Non-blocking / Interrupt transmitter
+│   │   ├── interrupt_rx.py     # Non-blocking / Interrupt receiver
+│   │   ├── basic_tx_rx.py      # Interactive CLI tool with configurable RF parameters
+│   │   ├── gpiozero_coexist.py # gpiozero coexistence demo
+│   │   ├── change_settings.py  # Runtime settings demo
+│   │   └── native_test.cpp     # Standalone C++ hardware verification
+│   └── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+│       ├── basic_tx.py         # Blocking transmitter
+│       └── basic_rx.py         # Blocking receiver
 │
 ├── others/                     # Ignore this, not a part of the project
 │
@@ -379,7 +393,7 @@ Returned by `radio.receive()`:
 2. **Pythonic API (`radiogem`)**:
 
    - Constructor allows complete configuration of SPI (`spi_channel=1, spi_speed=2000000`) and GPIO pins (`nss=7, dio1=27, reset=22, busy=24`).
-   - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm**.
+   - `begin()` defaults to your prototype settings: **866.5 MHz**, **125.0 kHz BW**, **SF7**, **CR 4/5**, **10 dBm** (434.0 MHz for SX1268).
    - `transmit()` seamlessly accepts both Python `str` and binary `bytes`.
    - `receive(timeout_ms=5000)` returns a `Packet` object (`packet.payload`, `packet.text`, `packet.rssi`, `packet.snr`) or `None` on timeout.
    - Supports Python context managers: `with SX1262(...) as radio:`.
@@ -387,9 +401,9 @@ Returned by `radio.receive()`:
 3. **GIL Release & `gpiozero` Coexistence**:
 
    - `transmit()` and `receive()` release the Python GIL (`py::call_guard<py::gil_scoped_release>()`) during radio operations so background threads, asyncio, and `gpiozero` event handlers run without blocking.
-   - SX1262 pins are owned by `PiHal` while other pins remain free for `gpiozero` (demonstrated in [`examples/gpiozero_coexist.py`](examples/gpiozero_coexist.py)).
+   - SX1262 pins are owned by `PiHal` while other pins remain free for `gpiozero` (demonstrated in [`examples/sx1262/gpiozero_coexist.py`](examples/sx1262/gpiozero_coexist.py)).
 
 4. **Multi-Stage Verification Support**:
-   - Includes [`examples/native_test.cpp`](examples/native_test.cpp) to verify native C++ SPI communication on the Pi before testing Python.
+   - Includes [`examples/sx1262/native_test.cpp`](examples/sx1262/native_test.cpp) to verify native C++ SPI communication on the Pi before testing Python.
 
 ---
