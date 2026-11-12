@@ -1,3 +1,70 @@
+# #4[ sx126x ]
+
+Support for **SX1261** and **SX1268** has been implemented, and the codebase has been reorganized into a modular, generation-based architecture designed for future expansion across Semtech's LoRa lineup.
+
+---
+
+### 1. New Modular Architecture
+
+```text
+src/
+├── bindings.cpp                 # Root pybind11 module; registers status codes, Packet, and generations
+├── sx1262_wrapper.h             # Forwarding header (ensures backwards compatibility)
+│
+├── common/                      # Shared across all radio families
+│   ├── packet.h                 # Packet struct (data, rssi, snr, status, text, etc.)
+│   ├── status_codes.h           # RadioLib status codes and get_status_text header
+│   └── status_codes.cpp         # Status codes & Packet pybind11 bindings
+│
+└── sx126x/                      # Semtech 2nd generation LoRa family
+    ├── sx126x_wrapper.h         # Base wrapper class (SPI, GPIO, IRQ, TX/RX, RF settings)
+    ├── sx126x_wrapper.cpp       # Base wrapper implementation with PiHal & lgpio
+    ├── sx1261_wrapper.h/.cpp    # SX1261 wrapper (-17 to +15 dBm PA)
+    ├── sx1262_wrapper.h/.cpp    # SX1262 wrapper (-9 to +22 dBm PA)
+    ├── sx1268_wrapper.h/.cpp    # SX1268 wrapper (410-810 MHz, -9 to +22 dBm)
+    ├── sx126x_bindings.h        # pybind11 SX126x bindings header
+    └── sx126x_bindings.cpp      # pybind11 SX126x class registrations & submodule
+```
+
+### 2. Chip-Specific Capabilities & Defaults
+
+| Chip | Frequency Range | Default Frequency | Output Power Range | Default Power | Primary Applications |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **SX1261** | 150 – 960 MHz | `866.5 MHz` | -17 dBm to +15 dBm | `10 dBm` | High-efficiency, battery-operated low-power nodes |
+| **SX1262** | 150 – 960 MHz | `866.5 MHz` | -9 dBm to +22 dBm | `10 dBm` | High-power nodes / gateways (868/915 MHz) |
+| **SX1268** | 410 – 810 MHz | `434.0 MHz` | -9 dBm to +22 dBm | `10 dBm` | High-power 433 MHz / 470 MHz China/EU bands |
+
+### 3. Python API Usage
+
+All three chips are exposed directly at the top level and under the `sx126x` namespace:
+
+```python
+import radiogem
+
+# Top-level imports (SX1262 maintains 100% backwards compatibility)
+radio1 = radiogem.SX1261(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
+radio2 = radiogem.SX1262(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
+radio3 = radiogem.SX1268(spi_channel=1, nss=7, dio1=27, reset=22, busy=24)
+
+# Or via generation submodule
+from radiogem.sx126x import SX1261, SX1262, SX1268
+```
+
+### 4. Future Generations Roadmap
+
+When you are ready to add support for other Semtech LoRa generations (e.g. 1st gen `SX127x` or 2.4 GHz `SX128x` / `LR11xx`):
+1. Create `src/sx127x/` with base and chip wrappers (`sx1276_wrapper`, `sx1278_wrapper`).
+2. Implement `bind_sx127x(m)` inside `src/sx127x/sx127x_bindings.cpp`.
+3. Call `bind_sx127x(m)` inside `src/bindings.cpp`.
+4. Add the new sources to `CMakeLists.txt`.
+
+### 5. Build & Examples Added
+- **[CMakeLists.txt](radiogem/CMakeLists.txt)**: Updated includes (`src/common`, `src/sx126x`) and pybind11 module source files.
+- **[examples/sx1261_basic_tx.py](radiogem/examples/sx1261_basic_tx.py)**: Ready-to-run transmitter example for SX1261.
+- **[examples/sx1268_basic_tx.py](radiogem/examples/sx1268_basic_tx.py)**: Ready-to-run transmitter example for SX1268 (434 MHz).
+- **[README.md](radiogem/README.md)** & **[building_guide.md](radiogem/building_guide.md)**: Updated documentation and architecture diagrams.
+
+
 # #3
 
 ### Answering Your Questions

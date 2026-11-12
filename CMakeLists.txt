@@ -15,6 +15,8 @@ add_subdirectory(RadioLib)
 set(RADIOGEM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/hal
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sx126x
     ${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/src
 )
 
@@ -73,7 +75,12 @@ endif()
 
 pybind11_add_module(radiogem
     src/bindings.cpp
-    src/sx1262_wrapper.cpp
+    src/common/status_codes.cpp
+    src/sx126x/sx126x_wrapper.cpp
+    src/sx126x/sx1261_wrapper.cpp
+    src/sx126x/sx1262_wrapper.cpp
+    src/sx126x/sx1268_wrapper.cpp
+    src/sx126x/sx126x_bindings.cpp
 )
 
 target_include_directories(radiogem PRIVATE ${RADIOGEM_INCLUDES})

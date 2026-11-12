@@ -1,6 +1,6 @@
 <h1 align="center">radiogem</h1>
 
-Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **SX1262 LoRa modules** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
+Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **Semtech 2nd generation LoRa modules (SX1261, SX1262, SX1268)** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
 ## <img src="media/hatv1.0.1.png" alt="Raspberry Pi HAT PCB" width="80%"/>
 
@@ -325,16 +325,32 @@ Returned by `radio.receive()`:
 ├── setup.py                    # pip install . support with CMakeExtension
 │
 ├── hal/
-│   └── PiHal.h                 # Official RadioLib lgpio HAL with my modifications
+│   └── PiHal.h                 # Official RadioLib lgpio HAL with modifications
 │
 ├── src/
-│   ├── sx1262_wrapper.h        # C++ wrapper header & Packet definition
-│   ├── sx1262_wrapper.cpp      # C++ wrapper implementation (RadioLib + PiHal)
-│   └── bindings.cpp            # pybind11 module bindings with GIL release
+│   ├── bindings.cpp            # Modular pybind11 root module entry point
+│   ├── sx1262_wrapper.h        # Compatibility header
+│   ├── common/
+│   │   ├── packet.h            # Packet struct definition
+│   │   ├── status_codes.h      # Error codes and get_status_text header
+│   │   └── status_codes.cpp    # Error codes and Packet bindings
+│   └── sx126x/                 # Semtech 2nd generation LoRa family
+│       ├── sx126x_wrapper.h    # Base SX126x wrapper class
+│       ├── sx126x_wrapper.cpp  # Base SX126x implementation
+│       ├── sx1261_wrapper.h    # SX1261 wrapper (-17 to +15 dBm)
+│       ├── sx1261_wrapper.cpp
+│       ├── sx1262_wrapper.h    # SX1262 wrapper (-9 to +22 dBm)
+│       ├── sx1262_wrapper.cpp
+│       ├── sx1268_wrapper.h    # SX1268 wrapper (410-810 MHz, -9 to +22 dBm)
+│       ├── sx1268_wrapper.cpp
+│       ├── sx126x_bindings.h   # pybind11 SX126x module definitions
+│       └── sx126x_bindings.cpp
 │
 ├── examples/
-│   ├── basic_tx.py             # Continuous blocking transmitter
-│   ├── basic_rx.py             # Continuous blocking receiver
+│   ├── basic_tx.py             # Continuous blocking transmitter (SX1262)
+│   ├── basic_rx.py             # Continuous blocking receiver (SX1262)
+│   ├── sx1261_basic_tx.py      # SX1261 transmitter example
+│   ├── sx1268_basic_tx.py      # SX1268 transmitter example
 │   ├── interrupt_tx.py         # Non-blocking / Interrupt transmitter
 │   ├── interrupt_rx.py         # Non-blocking / Interrupt receiver
 │   ├── basic_tx_rx.py          # Interactive CLI tool with configurable RF parameters

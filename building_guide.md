@@ -15,7 +15,7 @@ Understanding how the parts fit together:
        │
        ├──► Target 1: RadioLib (Compiles RadioLib/src/*.cpp into static library)
        │
-       └──► Target 2: radiogem (Compiles src/sx1262_wrapper.cpp & src/bindings.cpp)
+       └──► Target 2: radiogem (Compiles src/sx126x/*.cpp, src/common/*.cpp & src/bindings.cpp)
                 │
                 ▼ Links with: RadioLib + lgpio
                 │
@@ -27,7 +27,8 @@ When Python executes `import radiogem`:
 
 1. Python loads the `.so` shared library using dynamic linking (`dlopen`).
 2. The PyBind11 initialization function `PYBIND11_MODULE(radiogem, m)` registers the classes:
-   - `radiogem.SX1262`
+   - `radiogem.SX1261`, `radiogem.SX1262`, `radiogem.SX1268` (and `radiogem.sx126x.*`)
+   - `radiogem.Packet`
    - Status enums (`RADIOLIB_ERR_NONE`, `RADIOLIB_ERR_CHIP_NOT_FOUND`, etc.)
 3. The C++ code directly calls `lgpio` to control SPI (bus 0, CE 0) and GPIO pins (Reset, Busy, DIO1).
 
@@ -148,7 +149,7 @@ In Python, [`setup.py`](setup.py) is the **build, packaging, and installation co
 Under the hood, `setup.py` automatically:
 
 1. Calls `cmake` to configure the C++ project.
-2. Compiles `RadioLib`, `PiHal.h`, `sx1262_wrapper.cpp`, and `bindings.cpp`.
+2. Compiles `RadioLib`, `PiHal.h`, `src/common/status_codes.cpp`, `src/sx126x/*.cpp`, and `src/bindings.cpp`.
 3. Links against `lgpio`.
 4. Installs the resulting `radiogem` module directly into your Python environment (`.venv` or system Python).
 
