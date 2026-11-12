@@ -1,6 +1,6 @@
 <h1 align="center">radiogem</h1>
 
-Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **Semtech 2nd generation LoRa modules (SX1261, SX1262, SX1268)** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
+Python bindings for the [**RadioLib C++ library**](https://github.com/jgromes/RadioLib) targeting **Semtech LoRa modules (1st gen SX127x: SX1272-SX1279, and 2nd gen SX126x: SX1261, SX1262, SX1268)** on **Raspberry Pi**, utilizing RadioLib's official `PiHal` and Linux `lgpio`.
 
 ## <img src="media/hatv1.0.1.png" alt="Raspberry Pi HAT PCB" width="80%"/>
 
@@ -189,6 +189,12 @@ The `examples/` directory is organized into separate folders for each supported 
 | [`examples/sx1268/basic_tx.py`](examples/sx1268/basic_tx.py) | Blocking LoRa transmitter (410-810 MHz, default: 434 MHz) |
 | [`examples/sx1268/basic_rx.py`](examples/sx1268/basic_rx.py) | Blocking LoRa receiver |
 
+#### **SX1278 Examples (`examples/sx1278/`)**
+| Script | Purpose |
+| :--- | :--- |
+| [`examples/sx1278/basic_tx.py`](examples/sx1278/basic_tx.py) | Blocking LoRa transmitter (137-525 MHz, default: 434 MHz) |
+| [`examples/sx1278/basic_rx.py`](examples/sx1278/basic_rx.py) | Blocking LoRa receiver |
+
 ### Running the examples:
 
 Make sure you are running the following examples after activating your virtual environment.
@@ -214,6 +220,10 @@ python3 examples/sx1261/basic_rx.py
 # Run SX1268 examples:
 python3 examples/sx1268/basic_tx.py
 python3 examples/sx1268/basic_rx.py
+
+# Run SX1278 examples:
+python3 examples/sx1278/basic_tx.py
+python3 examples/sx1278/basic_rx.py
 ```
 
 ---
@@ -343,6 +353,17 @@ Returned by `radio.receive()`:
 │   │   ├── packet.h            # Packet struct definition
 │   │   ├── status_codes.h      # Error codes and get_status_text header
 │   │   └── status_codes.cpp    # Error codes and Packet bindings
+│   ├── sx127x/                 # Semtech 1st generation LoRa family
+│   │   ├── sx127x_wrapper.h    # Base SX127x wrapper class
+│   │   ├── sx127x_wrapper.cpp  # Base SX127x implementation
+│   │   ├── sx1272_wrapper.h/.cpp # SX1272 wrapper (860-1020 MHz)
+│   │   ├── sx1273_wrapper.h/.cpp # SX1273 wrapper
+│   │   ├── sx1276_wrapper.h/.cpp # SX1276 wrapper (137-1020 MHz)
+│   │   ├── sx1277_wrapper.h/.cpp # SX1277 wrapper
+│   │   ├── sx1278_wrapper.h/.cpp # SX1278 wrapper (137-525 MHz)
+│   │   ├── sx1279_wrapper.h/.cpp # SX1279 wrapper (137-960 MHz)
+│   │   ├── sx127x_bindings.h   # pybind11 SX127x module definitions
+│   │   └── sx127x_bindings.cpp
 │   └── sx126x/                 # Semtech 2nd generation LoRa family
 │       ├── sx126x_wrapper.h    # Base SX126x wrapper class
 │       ├── sx126x_wrapper.cpp  # Base SX126x implementation
@@ -368,7 +389,10 @@ Returned by `radio.receive()`:
 │   │   ├── gpiozero_coexist.py # gpiozero coexistence demo
 │   │   ├── change_settings.py  # Runtime settings demo
 │   │   └── native_test.cpp     # Standalone C++ hardware verification
-│   └── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+│   ├── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+│   │   ├── basic_tx.py         # Blocking transmitter
+│   │   └── basic_rx.py         # Blocking receiver
+│   └── sx1278/                 # SX1278 examples (137-525 MHz, default 434 MHz)
 │       ├── basic_tx.py         # Blocking transmitter
 │       └── basic_rx.py         # Blocking receiver
 │

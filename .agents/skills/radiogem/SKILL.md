@@ -97,6 +97,17 @@ radiogem/
 │   │   ├── packet.h            # Packet struct definition
 │   │   ├── status_codes.h      # Error codes and get_status_text header
 │   │   └── status_codes.cpp    # Error codes and Packet bindings
+│   ├── sx127x/                 # Semtech 1st generation LoRa family
+│   │   ├── sx127x_wrapper.h    # Base SX127x wrapper class
+│   │   ├── sx127x_wrapper.cpp  # Base SX127x implementation
+│   │   ├── sx1272_wrapper.h/.cpp # SX1272 wrapper (860-1020 MHz)
+│   │   ├── sx1273_wrapper.h/.cpp # SX1273 wrapper
+│   │   ├── sx1276_wrapper.h/.cpp # SX1276 wrapper (137-1020 MHz)
+│   │   ├── sx1277_wrapper.h/.cpp # SX1277 wrapper
+│   │   ├── sx1278_wrapper.h/.cpp # SX1278 wrapper (137-525 MHz)
+│   │   ├── sx1279_wrapper.h/.cpp # SX1279 wrapper (137-960 MHz)
+│   │   ├── sx127x_bindings.h   # pybind11 SX127x module definitions
+│   │   └── sx127x_bindings.cpp
 │   └── sx126x/                 # Semtech 2nd generation LoRa family
 │       ├── sx126x_wrapper.h    # Base SX126x wrapper class
 │       ├── sx126x_wrapper.cpp  # Base SX126x implementation
@@ -120,7 +131,10 @@ radiogem/
     │   ├── change_settings.py  # Dynamic RF configuration (frequency, SF, power, BW)
     │   ├── gpiozero_coexist.py # Safe coexistence pattern with gpiozero
     │   └── native_test.cpp     # Pure C++ standalone diagnostic tool (Stage 1 test)
-    └── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+    ├── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+    │   ├── basic_tx.py         # Simple blocking transmit example
+    │   └── basic_rx.py         # Simple blocking receive example
+    └── sx1278/                 # SX1278 examples (137-525 MHz, default 434 MHz)
         ├── basic_tx.py         # Simple blocking transmit example
         └── basic_rx.py         # Simple blocking receive example
 ```

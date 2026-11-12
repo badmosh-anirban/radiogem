@@ -15,7 +15,7 @@ Understanding how the parts fit together:
        │
        ├──► Target 1: RadioLib (Compiles RadioLib/src/*.cpp into static library)
        │
-       └──► Target 2: radiogem (Compiles src/sx126x/*.cpp, src/common/*.cpp & src/bindings.cpp)
+       └──► Target 2: radiogem (Compiles src/sx127x/*.cpp, src/sx126x/*.cpp, src/common/*.cpp & src/bindings.cpp)
                 │
                 ▼ Links with: RadioLib + lgpio
                 │
@@ -27,6 +27,7 @@ When Python executes `import radiogem`:
 
 1. Python loads the `.so` shared library using dynamic linking (`dlopen`).
 2. The PyBind11 initialization function `PYBIND11_MODULE(radiogem, m)` registers the classes:
+   - `radiogem.SX1272`, `radiogem.SX1273`, `radiogem.SX1276`, `radiogem.SX1277`, `radiogem.SX1278`, `radiogem.SX1279` (and `radiogem.sx127x.*`)
    - `radiogem.SX1261`, `radiogem.SX1262`, `radiogem.SX1268` (and `radiogem.sx126x.*`)
    - `radiogem.Packet`
    - Status enums (`RADIOLIB_ERR_NONE`, `RADIOLIB_ERR_CHIP_NOT_FOUND`, etc.)
