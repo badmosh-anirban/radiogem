@@ -23,5 +23,6 @@ venv/
 
 # personal
 gemini*
+error*
 # instruction*
 publishing.md

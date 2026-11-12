@@ -17,8 +17,32 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        # Detect suitable parallel build jobs (avoid OOM on 1GB Raspberry Pi)
-        jobs = os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL", str(min(4, max(1, os.cpu_count() or 1))))
+        # Detect suitable parallel build jobs.
+        # Default to 1 on systems with <= 2 GB RAM to avoid OOM kills (the
+        # C++ compiler frontend cc1plus uses >200 MB per job when compiling
+        # large pybind11 translation units).  Override by setting the
+        # CMAKE_BUILD_PARALLEL_LEVEL environment variable.
+        total_ram_mb = 0
+        try:
+            with open("/proc/meminfo") as f:
+                for line in f:
+                    if line.startswith("MemTotal:"):
+                        total_ram_mb = int(line.split()[1]) // 1024
+                        break
+        except Exception:
+            pass
+
+        cpu_count = os.cpu_count() or 1
+        if total_ram_mb and total_ram_mb <= 2048:
+            # Low-RAM device (e.g. Raspberry Pi Zero / 1 / 2 with 512 MB–1 GB):
+            # compile one file at a time to prevent OOM kills.
+            default_jobs = 1
+        elif total_ram_mb and total_ram_mb <= 4096:
+            default_jobs = min(2, cpu_count)
+        else:
+            default_jobs = min(4, cpu_count)
+
+        jobs = os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL", str(default_jobs))
 
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",

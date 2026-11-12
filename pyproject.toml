@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "radiogem"
 version = "1.0.0"
-description = "Python bindings for RadioLib SX1262 LoRa module on Raspberry Pi"
+description = "Python bindings for RadioLib SX126x LoRa modules (SX1261/SX1262/SX1268) on Raspberry Pi"
 readme = "README.md"
 requires-python = ">=3.10"
 license ="MIT"
@@ -20,7 +20,10 @@ authors = [
 keywords = [
     "LoRa",
     "radiolib",
+    "sx1261",
     "sx1262",
+    "sx1268",
+    "sx126x",
     "raspberry-pi",
     "iot",
     "radio",
