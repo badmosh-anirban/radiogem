@@ -1,0 +1,115 @@
+# =============================================================================
+# Dockerfile.wheel — Build a radiogem Linux aarch64 wheel on an Apple Silicon
+# Mac (M1/M2/M3/M4) without a Raspberry Pi.
+#
+# Since both the Mac and Raspberry Pi are arm64/aarch64, Docker Desktop runs
+# this image at near-native speed (hardware virtualisation, no QEMU emulation).
+#
+# Usage (from the radiogem repo root):
+#   docker build --platform linux/arm64 -f Dockerfile.wheel -t radiogem-builder .
+#   docker run --rm --platform linux/arm64 \
+#       -v "$(pwd)/dist":/dist \
+#       radiogem-builder
+#
+# Or just run the helper script:
+#   ./scripts/build_wheel_mac.sh
+# =============================================================================
+
+# manylinux_2_28_aarch64 = AlmaLinux 8 base, glibc 2.28, kernel headers ~4.18.
+# Wheels built here run on any Linux with glibc >= 2.28, including
+# Raspberry Pi OS Bookworm (Debian 12).
+FROM --platform=linux/arm64 quay.io/pypa/manylinux_2_28_aarch64
+
+# ---------------------------------------------------------------------------
+# System build tools
+# ---------------------------------------------------------------------------
+RUN dnf install -y \
+        cmake \
+        gcc \
+        gcc-c++ \
+        make \
+        git \
+        python3-devel \
+    && dnf clean all
+
+# ---------------------------------------------------------------------------
+# lgpio — header + linker stub only.
+#
+# We do NOT build lgpio from source here because the manylinux_2_28 image
+# ships kernel headers ~4.18 (RHEL 8 era), but lgpio >= 0.2 requires the
+# GPIO v2 ioctl structs (gpio_v2_line_request etc.) that were added in
+# kernel 5.10.  Building from source therefore fails.
+#
+# What we actually need for a *build-time* dependency is:
+#   1. lgpio.h  — so our C++ headers compile (#include <lgpio.h>)
+#   2. liblgpio.so — so the linker resolves -llgpio at link time
+#
+# At *runtime* on the Raspberry Pi the real lgpio installed via
+#   sudo apt install liblgpio-dev
+# is used; the stub never ships to the Pi.
+# ---------------------------------------------------------------------------
+
+# 1. Install the lgpio public header from the copy bundled in the repo.
+#    (Avoids a git clone and doesn't require building lgpio from source,
+#    which fails on manylinux_2_28 due to old kernel headers lacking GPIO v2.)
+COPY hal/lgpio.h /usr/local/include/lgpio.h
+
+# 2. Build a stub shared library from the no-op implementation in the repo.
+#    This satisfies the linker (-llgpio) at build time.
+#    At runtime on the Pi the real lgpio (apt install liblgpio-dev) is used.
+COPY hal/lgpio_stub.c /tmp/lgpio_stub.c
+RUN gcc -O0 -shared -fPIC \
+        -I/usr/local/include \
+        -o /usr/local/lib/liblgpio.so \
+        /tmp/lgpio_stub.c \
+    && ldconfig \
+    && rm /tmp/lgpio_stub.c
+
+# ---------------------------------------------------------------------------
+# Python — use cp313 to match Raspberry Pi OS Bookworm's default python3.13.
+# Change to cp311 or cp312 if your Pi runs an older Python.
+# ---------------------------------------------------------------------------
+ARG PYTHON_VERSION=cp313-cp313
+ENV PATH="/opt/python/${PYTHON_VERSION}/bin:${PATH}"
+
+RUN pip install --upgrade pip setuptools wheel cmake pybind11
+
+# ---------------------------------------------------------------------------
+# Copy source (respects .dockerignore — build/, venvs, media excluded)
+# ---------------------------------------------------------------------------
+WORKDIR /project
+COPY . .
+
+# Guard: RadioLib submodule must be initialised before running this build.
+RUN test -f RadioLib/CMakeLists.txt || { \
+    echo "ERROR: RadioLib submodule is missing."; \
+    echo "Run on your Mac first:  git submodule update --init --recursive"; \
+    exit 1; \
+}
+
+# ---------------------------------------------------------------------------
+# Build the wheel
+# ---------------------------------------------------------------------------
+# --no-build-isolation reuses pip/cmake/pybind11 installed above (no re-download).
+# CMAKE_BUILD_PARALLEL_LEVEL=4 is safe on the Mac (plenty of RAM in Docker).
+RUN CMAKE_BUILD_PARALLEL_LEVEL=4 \
+    pip wheel . \
+        --no-build-isolation \
+        --no-deps \
+        -w /tmp/wheelhouse \
+        -v
+
+# ---------------------------------------------------------------------------
+# Repair the wheel — bundles any needed .so deps, stamps the manylinux tag.
+# lgpio is intentionally excluded from bundling (it must come from the Pi).
+# ---------------------------------------------------------------------------
+RUN auditwheel repair /tmp/wheelhouse/radiogem-*.whl \
+        --plat manylinux_2_28_aarch64 \
+        --exclude liblgpio.so \
+        -w /dist \
+    && echo "auditwheel repair succeeded." \
+    || { echo "auditwheel not available, copying raw wheel"; \
+         cp /tmp/wheelhouse/radiogem-*.whl /dist/; }
+
+CMD ["bash", "-c", "echo 'Wheel already built during docker build. Check dist/ on your Mac.'"]
+

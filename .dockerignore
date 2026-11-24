@@ -1,0 +1,34 @@
+# Build artefacts
+build/
+dist/
+
+# Python virtualenvs
+.venv*/
+venv*/
+env*/
+.venvsx126x/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+src/*.egg-info/
+
+# macOS
+.DS_Store
+
+# Git
+.git/
+
+# Project-specific
+others/
+media/
+esp32_gateway/
+RaspberryPI_gateway/
+error_in_sx126x_branch.md
+
+# RadioLib extra dirs (keep src/ but skip examples/extras)
+RadioLib/.github/
+RadioLib/examples/
+RadioLib/extras/
+

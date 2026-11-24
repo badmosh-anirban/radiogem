@@ -1,9 +1,30 @@
 cmake_minimum_required(VERSION 3.18)
-project(radiogem LANGUAGES CXX)
+project(radiogem LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# ---------------------------------------------------------------------------
+# Memory-conscious compiler flags for low-RAM devices (e.g. Raspberry Pi).
+# cc1plus uses >200 MB of RSS per parallel job when compiling large pybind11
+# TUs at -O2/-O3; dropping to -O1 cuts that roughly in half while keeping the
+# code fast enough for embedded I/O work.  Pass -DRADIOGEM_HIGH_OPT=ON on the
+# cmake command line to restore -O2 on a machine with plenty of RAM.
+# ---------------------------------------------------------------------------
+option(RADIOGEM_HIGH_OPT "Use -O2 optimisation (needs >2 GB RAM per job)" OFF)
+
+if(NOT RADIOGEM_HIGH_OPT)
+    # Override the Release flags to use -O1 instead of -O2.
+    # We also disable LTO (link-time optimisation) which pybind11 enables by
+    # default via HAS_FLTO; LTO adds another ~100 MB of RSS during linking.
+    set(CMAKE_CXX_FLAGS_RELEASE "-O1 -DNDEBUG" CACHE STRING
+        "CXX flags for Release (memory-safe)" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "-O1 -DNDEBUG" CACHE STRING
+        "C flags for Release (memory-safe)" FORCE)
+    # Tell pybind11 not to probe for / enable LTO
+    set(HAS_FLTO FALSE CACHE BOOL "Disable LTO to reduce linker RAM usage" FORCE)
+endif()
 
 # Check and add RadioLib submodule/source
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/CMakeLists.txt")
@@ -15,6 +36,8 @@ add_subdirectory(RadioLib)
 set(RADIOGEM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/hal
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sx126x
     ${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/src
 )
 
@@ -29,18 +52,23 @@ endif()
 # ==============================================================================
 option(BUILD_NATIVE_TEST "Build native C++ standalone verification executable" OFF)
 
-if(BUILD_NATIVE_TEST OR (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp" AND NOT DEFINED SKBUILD))
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
-        add_executable(native_test examples/native_test.cpp)
-        target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
-        target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
-    endif()
+set(NATIVE_TEST_SRC "")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+endif()
+
+if((BUILD_NATIVE_TEST OR NOT DEFINED SKBUILD) AND NATIVE_TEST_SRC)
+    add_executable(native_test ${NATIVE_TEST_SRC})
+    target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
+    target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
 endif()
 
 # ==============================================================================
 # Target 2: radiogem Python Extension Module (pybind11)
 # ==============================================================================
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
 
 # 1. Try system pybind11 config
 find_package(pybind11 CONFIG QUIET)
@@ -73,7 +101,12 @@ endif()
 
 pybind11_add_module(radiogem
     src/bindings.cpp
-    src/sx1262_wrapper.cpp
+    src/common/status_codes.cpp
+    src/sx126x/sx126x_wrapper.cpp
+    src/sx126x/sx1261_wrapper.cpp
+    src/sx126x/sx1262_wrapper.cpp
+    src/sx126x/sx1268_wrapper.cpp
+    src/sx126x/sx126x_bindings.cpp
 )
 
 target_include_directories(radiogem PRIVATE ${RADIOGEM_INCLUDES})

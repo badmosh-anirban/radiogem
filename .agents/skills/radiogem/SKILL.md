@@ -92,16 +92,37 @@ radiogem/
 ├── hal/
 │   └── PiHal.h                 # RadioLibHal implementation wrapping Linux lgpio
 ├── src/
-│   ├── bindings.cpp            # Pybind11 module declaration, enums, Packet class, SX1262 methods
-│   ├── sx1262_wrapper.h        # C++ wrapper header, Packet struct, method declarations
-│   └── sx1262_wrapper.cpp      # C++ wrapper implementation, interrupt dispatchers
+│   ├── bindings.cpp            # Modular pybind11 root module entry point
+│   ├── common/
+│   │   ├── packet.h            # Packet struct definition
+│   │   ├── status_codes.h      # Error codes and get_status_text header
+│   │   └── status_codes.cpp    # Error codes and Packet bindings
+│   └── sx126x/                 # Semtech 2nd generation LoRa family
+│       ├── sx126x_wrapper.h    # Base SX126x wrapper class
+│       ├── sx126x_wrapper.cpp  # Base SX126x implementation
+│       ├── sx1261_wrapper.h    # SX1261 wrapper (-17 to +15 dBm)
+│       ├── sx1261_wrapper.cpp
+│       ├── sx1262_wrapper.h    # SX1262 wrapper (-9 to +22 dBm)
+│       ├── sx1262_wrapper.cpp
+│       ├── sx1268_wrapper.h    # SX1268 wrapper (410-810 MHz, -9 to +22 dBm)
+│       ├── sx1268_wrapper.cpp
+│       ├── sx126x_bindings.h   # pybind11 SX126x module definitions
+│       └── sx126x_bindings.cpp
 └── examples/
-    ├── basic_tx.py             # Simple blocking transmit example
-    ├── basic_rx.py             # Simple blocking receive example
-    ├── interrupt_rx.py         # Asynchronous non-blocking interrupt RX example
-    ├── change_settings.py      # Dynamic RF configuration (frequency, SF, power, BW)
-    ├── gpiozero_coexist.py     # Safe coexistence pattern with gpiozero
-    └── native_test.cpp         # Pure C++ standalone diagnostic tool (Stage 1 test)
+    ├── sx1261/                 # SX1261 examples (-17 to +15 dBm)
+    │   ├── basic_tx.py         # Simple blocking transmit example
+    │   └── basic_rx.py         # Simple blocking receive example
+    ├── sx1262/                 # SX1262 examples (-9 to +22 dBm)
+    │   ├── basic_tx.py         # Simple blocking transmit example
+    │   ├── basic_rx.py         # Simple blocking receive example
+    │   ├── interrupt_tx.py     # Asynchronous non-blocking interrupt TX example
+    │   ├── interrupt_rx.py     # Asynchronous non-blocking interrupt RX example
+    │   ├── change_settings.py  # Dynamic RF configuration (frequency, SF, power, BW)
+    │   ├── gpiozero_coexist.py # Safe coexistence pattern with gpiozero
+    │   └── native_test.cpp     # Pure C++ standalone diagnostic tool (Stage 1 test)
+    └── sx1268/                 # SX1268 examples (410-810 MHz, default 434 MHz)
+        ├── basic_tx.py         # Simple blocking transmit example
+        └── basic_rx.py         # Simple blocking receive example
 ```
 
 ---
@@ -335,33 +356,19 @@ finally:
 
 ## 8. Step-by-Step Guide to Extending `radiogem`
 
-When asked to add a new feature (e.g., FSK modulation, SX1268, CAD, or packet RSSI polling):
+When adding support for new Semtech LoRa generations (e.g. 1st gen SX127x, 2.4GHz SX128x, or LR11xx):
 
-### Workflow for Adding a Feature
-1. **Locate the upstream RadioLib C++ API**:
-   Look inside `RadioLib/src/modules/SX126x/SX1262.h` or `RadioLib/src/TypeDef.h` to see how RadioLib implements the function natively.
-2. **Update the C++ Wrapper Header (`src/sx1262_wrapper.h`)**:
-   Add the public method to `SX1262Wrapper`:
-   ```cpp
-   int16_t scan_channel();
-   ```
-3. **Implement the Method in `src/sx1262_wrapper.cpp`**:
-   Delegate cleanly to the RadioLib pointer:
-   ```cpp
-   int16_t SX1262Wrapper::scan_channel() {
-       if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
-       last_status = radio->scanChannel();
-       return last_status;
-   }
-   ```
-4. **Expose the Method in `src/bindings.cpp`**:
-   Register it with pybind11 with clear docstrings and argument tags:
-   ```cpp
-   .def("scan_channel", &SX1262Wrapper::scan_channel,
-        "Perform LoRa Channel Activity Detection (CAD). Returns status code (0 = channel clear, RADIOLIB_CHANNEL_FREE)")
-   ```
-5. **Add a Python Example / Unit Test in `examples/`**:
-   Create a test script validating the new functionality.
+### Architecture for New Generations
+1. **Create Generation Folder in `src/`**:
+   e.g. `src/sx127x/` for SX1276/SX1278.
+2. **Define Base and Chip Wrappers**:
+   Create `sx127x_wrapper.h`/`.cpp` for shared logic, and per-chip wrappers (`sx1276_wrapper`, `sx1278_wrapper`).
+3. **Define Generation Bindings**:
+   Create `sx127x_bindings.h`/`.cpp` with `bind_sx127x(pybind11::module_& m)` and bind to both root `m` and submodule `m.def_submodule("sx127x")`.
+4. **Register in `src/bindings.cpp`**:
+   Add `#include "sx127x/sx127x_bindings.h"` and call `bind_sx127x(m);`.
+5. **Update `CMakeLists.txt`**:
+   Add new sources and include paths.
 
 ---
 
