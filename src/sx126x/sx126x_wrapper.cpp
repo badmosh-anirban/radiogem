@@ -1,23 +1,33 @@
-#include "sx1262_wrapper.h"
+#include "sx126x_wrapper.h"
 #include "PiHal.h"
 #include <RadioLib.h>
 #include <cstdio>
 
-static SX1262Wrapper* s_wrapper_instance = nullptr;
+static SX126xWrapper* s_active_instance = nullptr;
 
 static void onPacketReceivedStatic() {
-    if (s_wrapper_instance) {
-        s_wrapper_instance->handlePacketReceived();
+    if (s_active_instance) {
+        s_active_instance->handlePacketReceived();
     }
 }
 
 static void onPacketSentStatic() {
-    if (s_wrapper_instance) {
-        s_wrapper_instance->handlePacketSent();
+    if (s_active_instance) {
+        s_active_instance->handlePacketSent();
     }
 }
 
-SX1262Wrapper::SX1262Wrapper(
+SX126xWrapper::SX126xWrapper() {
+}
+
+SX126xWrapper::~SX126xWrapper() {
+    if (s_active_instance == this) {
+        s_active_instance = nullptr;
+    }
+    close();
+}
+
+void SX126xWrapper::init_hardware(
     uint8_t spi_channel,
     uint32_t spi_speed,
     uint8_t spi_device,
@@ -50,19 +60,12 @@ SX1262Wrapper::SX1262Wrapper(
 
     hal = new PiHal(spi_channel, spi_speed, spi_device, gpio_device);
     mod = new Module(hal, mod_nss, dio1_pin, rst_pin, busy_pin);
-    radio = new SX1262(mod);
-
-    s_wrapper_instance = this;
 }
 
-SX1262Wrapper::~SX1262Wrapper() {
-    if (s_wrapper_instance == this) {
-        s_wrapper_instance = nullptr;
+void SX126xWrapper::close() {
+    if (s_active_instance == this) {
+        s_active_instance = nullptr;
     }
-    close();
-}
-
-void SX1262Wrapper::close() {
     if (radio) {
         clear_packet_received_action();
         clear_packet_sent_action();
@@ -81,49 +84,15 @@ void SX1262Wrapper::close() {
     is_initialized = false;
 }
 
-int16_t SX1262Wrapper::begin(
-    float frequency,
-    float bandwidth,
-    uint8_t spreading_factor,
-    uint8_t coding_rate,
-    uint8_t sync_word,
-    int8_t power,
-    uint16_t preamble_length,
-    float tcxo_voltage,
-    bool use_regulator_ldo
-) {
-    if (!radio) {
-        last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
-        return last_status;
-    }
-
-    last_status = radio->begin(
-        frequency,
-        bandwidth,
-        spreading_factor,
-        coding_rate,
-        sync_word,
-        power,
-        preamble_length,
-        tcxo_voltage,
-        use_regulator_ldo
-    );
-
-    if (last_status == RADIOLIB_ERR_NONE) {
-        is_initialized = true;
-    }
-    return last_status;
-}
-
 // ==========================================
-// 1. Blocking Transmit & Receive
+// 2. Blocking Transmit & Receive
 // ==========================================
 
-int16_t SX1262Wrapper::transmit(const std::string& data) {
+int16_t SX126xWrapper::transmit(const std::string& data) {
     return transmit_raw(reinterpret_cast<const uint8_t*>(data.data()), data.size());
 }
 
-int16_t SX1262Wrapper::transmit_raw(const uint8_t* data, size_t len) {
+int16_t SX126xWrapper::transmit_raw(const uint8_t* data, size_t len) {
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
         return last_status;
@@ -132,7 +101,7 @@ int16_t SX1262Wrapper::transmit_raw(const uint8_t* data, size_t len) {
     return last_status;
 }
 
-std::optional<Packet> SX1262Wrapper::receive(uint32_t timeout_ms, bool return_none_on_error) {
+std::optional<Packet> SX126xWrapper::receive(uint32_t timeout_ms, bool return_none_on_error) {
     Packet pkt;
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
@@ -161,14 +130,14 @@ std::optional<Packet> SX1262Wrapper::receive(uint32_t timeout_ms, bool return_no
 }
 
 // ==========================================
-// 2. Non-Blocking / Interrupt Transmit & Receive
+// 3. Non-Blocking / Interrupt Transmit & Receive
 // ==========================================
 
-int16_t SX1262Wrapper::start_transmit(const std::string& data) {
+int16_t SX126xWrapper::start_transmit(const std::string& data) {
     return start_transmit_raw(reinterpret_cast<const uint8_t*>(data.data()), data.size());
 }
 
-int16_t SX1262Wrapper::start_transmit_raw(const uint8_t* data, size_t len) {
+int16_t SX126xWrapper::start_transmit_raw(const uint8_t* data, size_t len) {
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
         return last_status;
@@ -178,7 +147,7 @@ int16_t SX1262Wrapper::start_transmit_raw(const uint8_t* data, size_t len) {
     return last_status;
 }
 
-int16_t SX1262Wrapper::finish_transmit() {
+int16_t SX126xWrapper::finish_transmit() {
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
         return last_status;
@@ -188,7 +157,7 @@ int16_t SX1262Wrapper::finish_transmit() {
     return last_status;
 }
 
-int16_t SX1262Wrapper::start_receive(uint32_t timeout_ms) {
+int16_t SX126xWrapper::start_receive(uint32_t timeout_ms) {
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
         return last_status;
@@ -203,7 +172,7 @@ int16_t SX1262Wrapper::start_receive(uint32_t timeout_ms) {
     return last_status;
 }
 
-std::optional<Packet> SX1262Wrapper::read_data(bool return_none_on_error) {
+std::optional<Packet> SX126xWrapper::read_data(bool return_none_on_error) {
     Packet pkt;
     if (!radio) {
         last_status = RADIOLIB_ERR_CHIP_NOT_FOUND;
@@ -232,44 +201,46 @@ std::optional<Packet> SX1262Wrapper::read_data(bool return_none_on_error) {
     return pkt;
 }
 
-void SX1262Wrapper::handlePacketReceived() {
+void SX126xWrapper::handlePacketReceived() {
     packet_received_flag = true;
     if (py_packet_received_cb) {
         py_packet_received_cb();
     }
 }
 
-void SX1262Wrapper::handlePacketSent() {
+void SX126xWrapper::handlePacketSent() {
     packet_sent_flag = true;
     if (py_packet_sent_cb) {
         py_packet_sent_cb();
     }
 }
 
-void SX1262Wrapper::set_packet_received_action(std::function<void()> cb) {
+void SX126xWrapper::set_packet_received_action(std::function<void()> cb) {
     py_packet_received_cb = cb;
     packet_received_flag = false;
+    s_active_instance = this;
     if (radio) {
         radio->setPacketReceivedAction(onPacketReceivedStatic);
     }
 }
 
-void SX1262Wrapper::clear_packet_received_action() {
+void SX126xWrapper::clear_packet_received_action() {
     py_packet_received_cb = nullptr;
     if (radio) {
         radio->clearPacketReceivedAction();
     }
 }
 
-void SX1262Wrapper::set_packet_sent_action(std::function<void()> cb) {
+void SX126xWrapper::set_packet_sent_action(std::function<void()> cb) {
     py_packet_sent_cb = cb;
     packet_sent_flag = false;
+    s_active_instance = this;
     if (radio) {
         radio->setPacketSentAction(onPacketSentStatic);
     }
 }
 
-void SX1262Wrapper::clear_packet_sent_action() {
+void SX126xWrapper::clear_packet_sent_action() {
     py_packet_sent_cb = nullptr;
     if (radio) {
         radio->clearPacketSentAction();
@@ -277,142 +248,98 @@ void SX1262Wrapper::clear_packet_sent_action() {
 }
 
 // ==========================================
-// 3. Power & Mode Management
+// 4. Power & Mode Management
 // ==========================================
 
-int16_t SX1262Wrapper::standby(uint8_t mode) {
+int16_t SX126xWrapper::standby(uint8_t mode) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->standby(mode);
     return last_status;
 }
 
-int16_t SX1262Wrapper::sleep(bool retain_config) {
+int16_t SX126xWrapper::sleep(bool retain_config) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->sleep(retain_config);
     return last_status;
 }
 
 // ==========================================
-// 4. Runtime RF & Modem Settings
+// 5. Runtime RF & Modem Settings
 // ==========================================
 
-int16_t SX1262Wrapper::set_frequency(float freq) {
+int16_t SX126xWrapper::set_frequency(float freq) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setFrequency(freq);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_bandwidth(float bw) {
+int16_t SX126xWrapper::set_bandwidth(float bw) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setBandwidth(bw);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_spreading_factor(uint8_t sf) {
+int16_t SX126xWrapper::set_spreading_factor(uint8_t sf) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setSpreadingFactor(sf);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_coding_rate(uint8_t cr) {
+int16_t SX126xWrapper::set_coding_rate(uint8_t cr) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setCodingRate(cr);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_output_power(int8_t power) {
+int16_t SX126xWrapper::set_output_power(int8_t power) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setOutputPower(power);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_sync_word(uint8_t sync_word, uint8_t control_bits) {
+int16_t SX126xWrapper::set_sync_word(uint8_t sync_word, uint8_t control_bits) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setSyncWord(sync_word, control_bits);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_current_limit(float current_limit) {
+int16_t SX126xWrapper::set_current_limit(float current_limit) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setCurrentLimit(current_limit);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_preamble_length(size_t preamble_length) {
+int16_t SX126xWrapper::set_preamble_length(size_t preamble_length) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setPreambleLength(preamble_length);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_crc(bool enable) {
+int16_t SX126xWrapper::set_crc(bool enable) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setCRC(enable ? 2 : 0);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_tcxo(float voltage, uint32_t delay) {
+int16_t SX126xWrapper::set_tcxo(float voltage, uint32_t delay) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setTCXO(voltage, delay);
     return last_status;
 }
 
-int16_t SX1262Wrapper::set_dio2_as_rf_switch(bool enable) {
+int16_t SX126xWrapper::set_dio2_as_rf_switch(bool enable) {
     if (!radio) return RADIOLIB_ERR_CHIP_NOT_FOUND;
     last_status = radio->setDio2AsRfSwitch(enable);
     return last_status;
 }
 
-float SX1262Wrapper::get_rssi() {
+float SX126xWrapper::get_rssi() {
     if (!radio) return 0.0f;
     return radio->getRSSI();
 }
 
-float SX1262Wrapper::get_snr() {
+float SX126xWrapper::get_snr() {
     if (!radio) return 0.0f;
     return radio->getSNR();
 }
 
-std::string SX1262Wrapper::get_status_text(int16_t status) {
-    switch (status) {
-        case RADIOLIB_ERR_NONE:
-            return "SUCCESS (0): Method executed successfully";
-        case RADIOLIB_ERR_UNKNOWN:
-            return "UNKNOWN_ERROR (-1): Unexpected error occurred";
-        case RADIOLIB_ERR_CHIP_NOT_FOUND:
-            return "CHIP_NOT_FOUND (-2): Radio chip not responding; check SPI wiring, channel, and NSS pin";
-        case RADIOLIB_ERR_MEMORY_ALLOCATION_FAILED:
-            return "MEMORY_ALLOCATION_FAILED (-3): Buffer memory allocation failed";
-        case RADIOLIB_ERR_PACKET_TOO_LONG:
-            return "PACKET_TOO_LONG (-4): Packet length exceeds maximum supported by radio";
-        case RADIOLIB_ERR_TX_TIMEOUT:
-            return "TX_TIMEOUT (-5): Transmit operation timed out";
-        case RADIOLIB_ERR_RX_TIMEOUT:
-            return "RX_TIMEOUT (-6): Timed out waiting for incoming packet";
-        case RADIOLIB_ERR_CRC_MISMATCH:
-            return "CRC_MISMATCH (-7): Received packet corrupted (CRC check failed)";
-        case RADIOLIB_ERR_INVALID_BANDWIDTH:
-            return "INVALID_BANDWIDTH (-8): Specified bandwidth is invalid for SX1262";
-        case RADIOLIB_ERR_INVALID_SPREADING_FACTOR:
-            return "INVALID_SPREADING_FACTOR (-9): Specified spreading factor is invalid for SX1262";
-        case RADIOLIB_ERR_INVALID_CODING_RATE:
-            return "INVALID_CODING_RATE (-10): Specified coding rate is invalid for SX1262";
-        case RADIOLIB_ERR_INVALID_OUTPUT_POWER:
-            return "INVALID_OUTPUT_POWER (-13): Specified output power is out of valid range";
-        case RADIOLIB_ERR_INVALID_CRC_CONFIGURATION:
-            return "INVALID_CRC_CONFIGURATION (-14): Invalid CRC configuration";
-        case RADIOLIB_ERR_INVALID_CURRENT_LIMIT:
-            return "INVALID_CURRENT_LIMIT (-17): Over-current protection limit out of valid range (45-240 mA)";
-        case RADIOLIB_ERR_INVALID_PREAMBLE_LENGTH:
-            return "INVALID_PREAMBLE_LENGTH (-18): Specified preamble length is invalid";
-        case RADIOLIB_ERR_INVALID_TCXO_VOLTAGE:
-            return "INVALID_TCXO_VOLTAGE (-705): Invalid TCXO voltage (valid: 1.6, 1.7, 1.8, 2.2, 2.4, 2.7, 3.0, 3.3 V)";
-        case RADIOLIB_ERR_SPI_CMD_TIMEOUT:
-            return "SPI_CMD_TIMEOUT (-706): SX126x command timed out (check TCXO vs XTAL setting, or BUSY pin)";
-        case RADIOLIB_ERR_SPI_CMD_INVALID:
-            return "SPI_CMD_INVALID (-707): SX126x command invalid (check TCXO vs XTAL setting)";
-        case RADIOLIB_ERR_SPI_CMD_FAILED:
-            return "SPI_CMD_FAILED (-708): SX126x command failed";
-        default:
-            return "ERROR (" + std::to_string(status) + ")";
-    }
-}

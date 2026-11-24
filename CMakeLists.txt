@@ -15,6 +15,9 @@ add_subdirectory(RadioLib)
 set(RADIOGEM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/hal
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sx126x
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sx127x
     ${CMAKE_CURRENT_SOURCE_DIR}/RadioLib/src
 )
 
@@ -29,12 +32,17 @@ endif()
 # ==============================================================================
 option(BUILD_NATIVE_TEST "Build native C++ standalone verification executable" OFF)
 
-if(BUILD_NATIVE_TEST OR (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp" AND NOT DEFINED SKBUILD))
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
-        add_executable(native_test examples/native_test.cpp)
-        target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
-        target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
-    endif()
+set(NATIVE_TEST_SRC "")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/sx1262/native_test.cpp")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+    set(NATIVE_TEST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/examples/native_test.cpp")
+endif()
+
+if((BUILD_NATIVE_TEST OR NOT DEFINED SKBUILD) AND NATIVE_TEST_SRC)
+    add_executable(native_test ${NATIVE_TEST_SRC})
+    target_include_directories(native_test PRIVATE ${RADIOGEM_INCLUDES})
+    target_link_libraries(native_test PRIVATE RadioLib ${LGPIO_LIB})
 endif()
 
 # ==============================================================================
@@ -73,7 +81,20 @@ endif()
 
 pybind11_add_module(radiogem
     src/bindings.cpp
-    src/sx1262_wrapper.cpp
+    src/common/status_codes.cpp
+    src/sx126x/sx126x_wrapper.cpp
+    src/sx126x/sx1261_wrapper.cpp
+    src/sx126x/sx1262_wrapper.cpp
+    src/sx126x/sx1268_wrapper.cpp
+    src/sx126x/sx126x_bindings.cpp
+    src/sx127x/sx127x_wrapper.cpp
+    src/sx127x/sx1272_wrapper.cpp
+    src/sx127x/sx1273_wrapper.cpp
+    src/sx127x/sx1276_wrapper.cpp
+    src/sx127x/sx1277_wrapper.cpp
+    src/sx127x/sx1278_wrapper.cpp
+    src/sx127x/sx1279_wrapper.cpp
+    src/sx127x/sx127x_bindings.cpp
 )
 
 target_include_directories(radiogem PRIVATE ${RADIOGEM_INCLUDES})
